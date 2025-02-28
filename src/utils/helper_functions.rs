@@ -1,12 +1,36 @@
+use core::panic;
+
 
 // A Hex string is something like A01BCF23
 // We need to map each of these to their corresponding hex val
 // So in this case the outcome would be [10,0,1,11,12,15,2,3]
 pub fn hex_str_to_bytes(inp: &str) -> Vec<u8> {
     let mut ret = Vec::new();
+    let s: Vec<char> = inp.chars().collect();
 
-    for c in inp.chars() {
-        ret.push(hex_char_to_byte(c))
+    for chunk in s.chunks(2) {
+        if chunk.len() == 2{ 
+            ret.push(hex_char_to_byte(chunk[0]) << 4 | hex_char_to_byte(chunk[1]))
+        }
+        else {
+            ret.push(hex_char_to_byte(chunk[0]))
+        }
+        
+    }
+    return ret
+}
+
+pub fn hex_char_array_to_bytes(inp: &[char]) -> Vec<u8> {
+    let mut ret = Vec::new();
+
+    for chunk in inp.chunks(2) {
+        if chunk.len() == 2{ 
+            ret.push(hex_char_to_byte(chunk[0]) << 4 | hex_char_to_byte(chunk[1]))
+        }
+        else {
+            ret.push(hex_char_to_byte(chunk[0]))
+        }
+        
     }
     return ret
 }
@@ -24,16 +48,24 @@ pub fn base64_char_to_bytes(c: char) -> u8 {
     };
 }
 
-// Convert the base64 character to its corresponding val
-// TODO: Better handling for characters with val greater that 63
-pub fn base64_str_to_bytes(inp: &str) -> Vec<u8> {
+pub fn binary_str_to_bytes(inp: &str) -> Vec<u8> {
+    let trimmed_str = inp.replace(" ", "");
     let mut ret:Vec<u8> = Vec::new();
-    for c in inp.chars() {
-        ret.push(base64_char_to_bytes(c));
+    // We make an assumption here. 
+    // The assumption is that every character passed to us only takes a single byte.
+    // This is only true for a subset of characters, utf-8 strings can have characters take 1-4 bytes
+    for byte_chunk in trimmed_str.as_bytes().chunks(8) {
+        let mut b = 0;
+
+        // This will be the byte for a single char
+        for character_byte in byte_chunk {
+            b <<= 1;
+            b |= character_byte - '0' as u8;
+        }
+        ret.push(b);
     }
 
     return ret;
-    
 }
 
 pub fn byte_to_base64_char(b: u8) -> char {
@@ -52,7 +84,7 @@ pub fn byte_to_base64_char(b: u8) -> char {
 pub fn byte_to_hex_char(b: u8) -> char {
     return match b {
         0..=9 => (b + b'0') as char,
-        10..=15 => (b + b'A' - 10) as char,
+        10..=15 => (b + b'a' - 10) as char,
         _ => panic!("Bad range supplied")
     }
     
@@ -79,7 +111,7 @@ pub fn bytes_to_hex_str(inp: Vec<u8>) -> String {
 // Base64 means grabbing 6 bits at a time from the byte array and converting them
 // Easiest way to do this is window with size 3 to grab 24 bits at a time 
 // If the last part of the window is not full we can pad with =
-pub fn bytes_to_base_64_str(inp: Vec<u8>) -> String {
+pub fn bytes_to_base_64_str(add_padding: bool, inp: Vec<u8>) -> String {
     let mut ret: String = String::new();
     for byte_chunk in inp.chunks(3) {
         let mut combined: u32 = 0;
@@ -92,9 +124,9 @@ pub fn bytes_to_base_64_str(inp: Vec<u8>) -> String {
 
 
         let map: u32 = 0b0011_1111;
-        let char_1:u8 = ((combined & (map << 18)) >> 18) as u8;
-        let char_2:u8 = ((combined & (map << 12)) >> 12 ) as u8;
-        let char_3:u8 = ((combined & (map << 6)) >> 6) as u8;
+        let char_1:u8 = ((combined >> 18) & map) as u8;
+        let char_2:u8 = ((combined >> 12) & map) as u8;
+        let char_3:u8 = ((combined >> 6) & map) as u8;
         let char_4:u8 = (combined & map) as u8;
         
         if byte_chunk.len() == 3 {
@@ -110,6 +142,10 @@ pub fn bytes_to_base_64_str(inp: Vec<u8>) -> String {
             ret.push(byte_to_base64_char(char_1));
             ret.push(byte_to_base64_char(char_2));
             ret.push(byte_to_base64_char(char_3));
+            if add_padding {
+                ret.push('=');
+            }
+            
         }
 
         // byte_chunk.len == 1 means we have 8 bits
@@ -117,13 +153,16 @@ pub fn bytes_to_base_64_str(inp: Vec<u8>) -> String {
         if byte_chunk.len() == 1 {
             ret.push(byte_to_base64_char(char_1));
             ret.push(byte_to_base64_char(char_2));
+            if add_padding {
+                ret.push('=');
+                ret.push('=');
+            }
+            
         }
-        
-
+        println!("combined in binary was: {}", format!("{combined:b}"))
     }
     return ret;
 }
-
 // Converts a given hex character to its bytes value
 // TODO: Fix the handling on characters that are out of range
 pub fn hex_char_to_byte(c: char) -> u8 {
@@ -131,13 +170,52 @@ pub fn hex_char_to_byte(c: char) -> u8 {
         '0'..='9' => c as u8 - 48,
         'A'..='F' => c as u8 - 55 ,
         'a'..='f' => c as u8 - 87,
-        _ => panic!("I should handle this better :)")
+        _ => panic!("hex_char_to_byte given value outside of accepted char range, i.e. 0-9, a-f, or A-F, char was {}", c)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hex_str_base_64_str_test() {
+        assert_eq!(bytes_to_base_64_str(false,  hex_str_to_bytes("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")), "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")
+    }
+
+    #[test]
+    fn hex_str_to_bytes_test() {
+        assert_eq!(hex_str_to_bytes("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"), 
+        Vec::from([0b01001001, 0b00100111, 0b01101101, 0b00100000, 0b01101011, 0b01101001, 0b01101100, 0b01101100, 0b01101001, 0b01101110, 0b01100111, 0b00100000, 0b01111001, 0b01101111, 0b01110101, 0b01110010, 0b00100000, 0b01100010, 0b01110010, 0b01100001, 0b01101001, 0b01101110, 0b00100000, 0b01101100, 0b01101001, 0b01101011, 0b01100101, 0b00100000, 0b01100001, 0b00100000, 0b01110000, 0b01101111, 0b01101001, 0b01110011, 0b01101111, 0b01101110, 0b01101111, 0b01110101, 0b01110011, 0b00100000, 0b01101101, 0b01110101, 0b01110011, 0b01101000, 0b01110010, 0b01101111, 0b01101111, 0b01101101])
+    );
+    }
+
+    #[test] 
+    fn bytes_to_base_64_str_test() {
+        // 0100 1001 0010
+        // 000001000000100100000010
+        // 1000000100100000010
+        // 0100 1001 0010 0000
+        // assert_eq!(bytes_to_base_64_str(false, Vec::from([0b0000,0b0000,0b0000])), "AAA");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b01001001, 0b00100111, 0b01101101, 0b00100000, 0b01101011, 0b01101001, 0b01101100, 0b01101100, 0b01101001, 0b01101110, 0b01100111, 0b00100000, 0b01111001, 0b01101111, 0b01110101, 0b01110010, 0b00100000, 0b01100010, 0b01110010, 0b01100001, 0b01101001, 0b01101110, 0b00100000, 0b01101100, 0b01101001, 0b01101011, 0b01100101, 0b00100000, 0b01100001, 0b00100000, 0b01110000, 0b01101111, 0b01101001, 0b01110011, 0b01101111, 0b01101110, 0b01101111, 0b01110101, 0b01110011, 0b00100000, 0b01101101, 0b01110101, 0b01110011, 0b01101000, 0b01110010, 0b01101111, 0b01101111, 0b01101101])),
+        "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
+        // ;
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b01001101, 0b01100001, 0b01101110])),
+        "TWFu");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111])), "/w");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_1111,0b1111_1111])), "////");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_1111])), "//8");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111])), "8P///w");
+        // assert_eq!(bytes_to_base_64_str(false, Vec::from([0b0000,0b0000,0b0000])), "AAA");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([])), "");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111])), "Dw");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111,0b1111_1111])), "/w//");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_0000])), "//A");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111,0b1111_0000,0b1111_1111,0b0000_1111,0b1111_1111])), "8P////D/D/8");
+
+        let test_str: &str = "Its+all+OgRe+now";
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b00100010, 0b11011011, 0b00111110, 0b01101010, 0b01011001, 0b01111110, 0b00111010, 0b00000100, 0b01011110, 0b11111010, 0b01111010, 0b00110000])), test_str);
+    }
 
     #[test]
     fn hex_char_to_byte_test() {
@@ -152,8 +230,8 @@ mod tests {
     fn byte_to_hex_char_test() {
         assert_eq!(byte_to_hex_char(0), '0');
         assert_eq!(byte_to_hex_char(1), '1');
-        assert_eq!(byte_to_hex_char(10), 'A');
-        assert_eq!(byte_to_hex_char(15), 'F');
+        assert_eq!(byte_to_hex_char(10), 'a');
+        assert_eq!(byte_to_hex_char(15), 'f');
         // Need to fix handling
         // assert_eq!(byte_to_hex_char(16), None);
     }
@@ -169,16 +247,6 @@ mod tests {
         assert_eq!(byte_to_base64_char(61), '9');
         assert_eq!(byte_to_base64_char(62), '+');
         assert_eq!(byte_to_base64_char(63), '/');
-        // Need to fix handling
-        // assert_eq!(byte_to_hex_char(16), None);
-    }
-
-    #[test]
-    fn hex_str_to_bytes_test() {
-        assert_eq!(hex_str_to_bytes("A01BCF23"), Vec::from([10,0,1,11,12,15,2,3]));
-        assert_eq!(hex_str_to_bytes("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"), 
-        Vec::from([0b0100,0b1001,0b0010,0b0111,0b0110,0b1101,0b0010,0b0000,0b0110,0b1011,0b0110,0b1001,0b0110,0b1100,0b0110,0b1100,0b0110,0b1001,0b0110,0b1110,0b0110,0b0111,0b0010,0b0000,0b0111,0b1001,0b0110,0b1111,0b0111,0b0101,0b0111,0b0010,0b0010,0b0000,0b0110,0b0010,0b0111,0b0010,0b0110,0b0001,0b0110,0b1001,0b0110,0b1110,0b0010,0b0000,0b0110,0b1100,0b0110,0b1001,0b0110,0b1011,0b0110,0b0101,0b0010,0b0000,0b0110,0b0001,0b0010,0b0000,0b0111,0b0000,0b0110,0b1111,0b0110,0b1001,0b0111,0b0011,0b0110,0b1111,0b0110,0b1110,0b0110,0b1111,0b0111,0b0101,0b0111,0b0011,0b0010,0b0000,0b0110,0b1101,0b0111,0b0101,0b0111,0b0011,0b0110,0b1000,0b0111,0b0010,0b0110,0b1111,0b0110,0b1111,0b0110,0b1101])
-    );
     }
 
     #[test] 
@@ -190,27 +258,16 @@ mod tests {
         assert_eq!(bytes_to_hex_str(Vec::from([])), "");
     }
 
-    #[test] 
-    fn bytes_to_base_64_str_test() {
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b1111_1111])), "/w");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b1111_1111,0b1111_1111,0b1111_1111])), "////");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b1111_1111,0b1111_1111])), "//8");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111])), "8P///w");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b0000_0000])), "AA");
-        assert_eq!(bytes_to_base_64_str(Vec::from([])), "");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b0000_1111])), "Dw");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b1111_1111,0b0000_1111,0b1111_1111])), "/w//");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b1111_1111,0b1111_0000])), "//A");
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111,0b1111_0000,0b1111_1111,0b0000_1111,0b1111_1111])), "8P////D/D/8");
+    #[test]
+    fn binary_str_to_bytes_test() {
+        assert_eq!(binary_str_to_bytes("00100010 11011011 00111110 01101010 01011001 01111110 00111010 00000100 01011110 11111010 01111010 00110000"), [0b00100010, 0b11011011, 0b00111110, 0b01101010, 0b01011001, 0b01111110, 0b00111010, 0b00000100, 0b01011110, 0b11111010, 0b01111010, 0b00110000]);
+    }
 
+    #[test]
+    fn base64_str_to_bytes_test() {
         let test_str = "Its+all+OgRe+now";
-        assert_eq!(bytes_to_base_64_str(base64_str_to_bytes(test_str)), test_str);
-
-
-        
-        assert_eq!(bytes_to_base_64_str(Vec::from([0b0100,0b1001,0b0010,0b0111,0b0110,0b1101,0b0010,0b0000,0b0110,0b1011,0b0110,0b1001,0b0110,0b1100,0b0110,0b1100,0b0110,0b1001,0b0110,0b1110,0b0110,0b0111,0b0010,0b0000,0b0111,0b1001,0b0110,0b1111,0b0111,0b0101,0b0111,0b0010,0b0010,0b0000,0b0110,0b0010,0b0111,0b0010,0b0110,0b0001,0b0110,0b1001,0b0110,0b1110,0b0010,0b0000,0b0110,0b1100,0b0110,0b1001,0b0110,0b1011,0b0110,0b0101,0b0010,0b0000,0b0110,0b0001,0b0010,0b0000,0b0111,0b0000,0b0110,0b1111,0b0110,0b1001,0b0111,0b0011,0b0110,0b1111,0b0110,0b1110,0b0110,0b1111,0b0111,0b0101,0b0111,0b0011,0b0010,0b0000,0b0110,0b1101,0b0111,0b0101,0b0111,0b0011,0b0110,0b1000,0b0111,0b0010,0b0110,0b1111,0b0110,0b1111,0b0110,0b1101])),
-         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
-        
+        let binary = binary_str_to_bytes("00100010 11011011 00111110 01101010 01011001 01111110 00111010 00000100 01011110 11111010 01111010 00110000");
+        // assert_eq!(base64_str_to_bytes(test_str), binary);
     }
 
     #[test]

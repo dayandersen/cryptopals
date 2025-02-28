@@ -4,7 +4,7 @@ use crate::utils::helper_functions;
 //Combine 2 u4s in a u8
 
 pub fn hex_string_to_base64(inp: &str ) -> String{
-    helper_functions::bytes_to_base_64_str(helper_functions::hex_str_to_bytes(inp))
+    helper_functions::bytes_to_base_64_str(false, helper_functions::hex_str_to_bytes(inp))
 }
 
 #[cfg(test)]
