@@ -1,13 +1,25 @@
-use crate::set1::challenge3; 
+use crate::set1::challenge3;
 
-pub fn find_the_xored_string() {
+use super::challenge3::generate_string_score; 
+
+pub fn find_the_xored_string() -> String {
     let vec:Vec<char> = INPUT_STR.replace("\n", "").chars().collect();
+    let mut potentials:Vec<String> = Vec::new();
 
     for thing in vec.chunks(60) {
-        println!("{}", challenge3::single_char_xor_decryption_char_array(thing));
+        potentials.push(challenge3::single_char_xor_decryption_char_array(thing));
     }
 
-
+    let mut likely: String = String::new();
+    let mut likely_score = 100000.0;
+    for s in potentials {
+        let curr_score = generate_string_score(&s);
+        if curr_score < likely_score {
+            likely_score = curr_score;
+            likely = s.clone();
+        }
+    }
+    return likely;
 }
 
 #[cfg(test)]
@@ -17,7 +29,8 @@ use super::*;
 
     #[test]
     pub fn do_stuff() {
-        find_the_xored_string();
+        assert_eq!("ow that the party is jumping
+=", find_the_xored_string());
     }
 }
 

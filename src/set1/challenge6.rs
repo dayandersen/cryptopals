@@ -1,46 +1,26 @@
-use std::fs::read;
-
-use crate::{set1::challenge3::single_char_xor_decryption_helper, utils::helper_functions};
-
-
+use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*};
 
 pub fn turning_up_the_heat() {
     // INPUT_STR
     //try values from 2 to (say) 40. 
-    let inp_str_bytes = INPUT_STR.as_bytes();
-    let distances_and_key_size = normalized_edit_distances_to_key_size(inp_str_bytes);
-    let distance_and_key_size_four = normalized_edit_distances_to_key_size_four(inp_str_bytes);
-    // for tup in distances_and_key_size {
-    //     println!("distance: {} key_size {}", tup.0, tup.1);
-    // }
+    // base64::base64_char_to_bytes(c);
+    
+    let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
+    // let distances_and_key_size = normalized_edit_distances_to_key_size(inp_str_bytes);
+    let distance_and_key_size_four = normalized_edit_distances_to_key_size_four_v(inp_str_bytes.clone());
 
-    println!();
-    for tup in distance_and_key_size_four {
-        println!("distance {} key_size {}", tup.0, tup.1);
-    }
-
-    for i in 0..5 {
-        let block_size = distances_and_key_size[i].1;
-        let mut blocks:Vec<Vec<u8>> = Vec::new();
-        let mut block_count = 0;
-
-        for block in inp_str_bytes.chunks(block_size as usize) {
-            if blocks.len() as u32 != block_size {
-                blocks.push(block.to_vec());
-            } else {
-                for byte in block.to_vec() {
-                    blocks[(block_count % block_size) as usize].push(byte)
-                }
-            }
-            block_count += 1
-        }
+    for distance_to_key_size_tup in &distance_and_key_size_four[0..10] {
+        println!("Generating XORs for keysize: {}", distance_to_key_size_tup.1);
+        let key_size = distance_to_key_size_tup.1;
+        let blocks = generate_byte_blocks_v(inp_str_bytes.clone(), key_size as usize);
 
         for block in blocks {
-            println!("{}", single_char_xor_decryption_helper(block))
+            print!("{}", single_char_xor_decryption_xor_key(block) as char)
         }
-        
+        println!();
     }
 }
+
 
 fn normalized_edit_distances_to_key_size(inp_bytes: &[u8]) -> Vec<(u32,u32)>{
     let mut distances_and_key_size: Vec<(u32, u32)> = Vec::new();
@@ -53,10 +33,10 @@ fn normalized_edit_distances_to_key_size(inp_bytes: &[u8]) -> Vec<(u32,u32)>{
             distances.push(helper_functions::hamming_distance_bytes(
                 &inp_bytes[i.. i +key_size], 
                 &inp_bytes[i+key_size..i + key_size * 2]
-            ))
+            ) * 1000)
         }
         
-        distances_and_key_size.push(((distances.iter().sum::<u32>())/distances.len() as u32 , key_size as u32));
+        distances_and_key_size.push(((distances.iter().sum::<u32>())/(key_size * distances.len()) as u32 , key_size as u32));
     }
 
     distances_and_key_size.sort();
@@ -64,6 +44,11 @@ fn normalized_edit_distances_to_key_size(inp_bytes: &[u8]) -> Vec<(u32,u32)>{
 }
 
 fn normalized_edit_distances_to_key_size_four(inp_bytes: &[u8]) -> Vec<(u32,u32)>{
+    return normalized_edit_distances_to_key_size_four_v(inp_bytes.to_vec())
+}
+
+
+fn normalized_edit_distances_to_key_size_four_v(inp_bytes: Vec<u8>) -> Vec<(u32,u32)>{
     let mut distances_and_key_size: Vec<(u32, u32)> = Vec::new();
     
     for key_size in 2..40 {
@@ -73,28 +58,40 @@ fn normalized_edit_distances_to_key_size_four(inp_bytes: &[u8]) -> Vec<(u32,u32)
         distances.push(helper_functions::hamming_distance_bytes(
             &inp_bytes[0..key_size], 
             &inp_bytes[key_size..key_size*2]
-        ));
+        )* 1000);
         distances.push(helper_functions::hamming_distance_bytes(
             &inp_bytes[key_size*2..key_size*3], 
             &inp_bytes[key_size*3..key_size*4]
-        ));
-        distances.push(helper_functions::hamming_distance_bytes(
-            &inp_bytes[key_size*4..key_size*5], 
-            &inp_bytes[key_size*5..key_size*6]
-        ));
-        distances.push(helper_functions::hamming_distance_bytes(
-            &inp_bytes[key_size*6..key_size*7], 
-            &inp_bytes[key_size*7..key_size*8]
-        ));
+        )* 1000);
         
-        distances_and_key_size.push(((distances.iter().sum::<u32>())/distances.len() as u32 , key_size as u32));
+        distances_and_key_size.push(((distances.iter().sum::<u32>())/ (key_size * distances.len()) as u32 , key_size as u32));
     }
 
     distances_and_key_size.sort();
     return distances_and_key_size;
 }
 
+fn generate_byte_blocks(bytes: &[u8], key_size: usize) -> Vec<Vec<u8>> {
+    return generate_byte_blocks_v(bytes.to_vec(), key_size)
+}
 
+fn generate_byte_blocks_v(bytes: Vec<u8>, key_size: usize) -> Vec<Vec<u8>> {
+    let mut blocks:Vec<Vec<u8>> = Vec::new();
+    for _ in 0..key_size {
+        blocks.push(Vec::new());
+    }
+    // break the ciphertext into blocks of KEYSIZE length. 
+    for chunk in bytes.chunks(key_size) {
+        // make a block that is the first byte of every block,
+        // and a block that is the second byte of every block, and so on. 
+        let mut count = 0;
+        for byte in chunk {
+            blocks[count % key_size].push(*byte);
+            count += 1
+        }
+    }
+    return blocks;
+}
 
 #[cfg(test)]
 mod tests {
@@ -103,6 +100,28 @@ mod tests {
     #[test]
     pub fn it_work() {
         turning_up_the_heat()
+    }
+
+    #[test]
+    pub fn generate_byte_blocks_test() {
+        let bytes = [1,2,3,4,5];
+        let res = generate_byte_blocks(&bytes, 2);
+        assert_eq!(res[0], Vec::from([0b1,0b11,0b101]));
+        assert_eq!(res[1], Vec::from([0b10,0b100]));
+
+
+        let bytes = [1,2,3,4,5,6,7,8,9];
+        let res = generate_byte_blocks(&bytes, 3);
+        assert_eq!(res[0], Vec::from([1,4,7]));
+        assert_eq!(res[1], Vec::from([2,5,8]));
+        assert_eq!(res[2], Vec::from([3,6,9]));
+    }
+
+    #[test]
+    pub fn normalized_edit_distances_to_key_size_test() {
+        let key_distances_four = normalized_edit_distances_to_key_size_four(INPUT_STR.as_bytes());
+        let key_distances = normalized_edit_distances_to_key_size(INPUT_STR.as_bytes());
+
     }
 }
 
@@ -170,4 +189,4 @@ DxsJSw1ICFUdBgpTJjsIF00GAE1ULB1NPRpPLF5JAgJUVAUAAAYKCAFFXjUe
 DBBOFRwOBgA+T04pC0kDElMdC0VXBgYdFkU2CgtNEAEUVBwTWXhTVG5SGg8e
 AB0cRSo+AwgKRSANExlJCBQaBAsANU9TKxFJL0dMHRwRTAtPBRwQMAAATQcB
 FlRlIkw5QwA2GggaR0YBBg5ZTgIcAAw3SVIaAQcVEU8QTyEaYy0fDE4ITlhI
-Jk8DCkkcC3hFMQIEC0EbAVIqCFZBO1IdBgZUVA4QTgUWSR4QJwwRTWM=";
+Jk8DCkkcC3hFMQIEC0EbAVIqCFZBO1IdBgZUVA4QTgUWSR4QJwwRTWM";

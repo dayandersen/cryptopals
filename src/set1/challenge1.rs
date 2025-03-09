@@ -1,10 +1,10 @@
-use crate::utils::helper_functions;
+use crate::utils::*;
 
 //Turn hex into bytes, each entry will be a u4
 //Combine 2 u4s in a u8
 
 pub fn hex_string_to_base64(inp: &str ) -> String{
-    helper_functions::bytes_to_base_64_str(false, helper_functions::hex_str_to_bytes(inp))
+    base64::bytes_to_base_64_str(false, hex::hex_str_to_bytes(inp))
 }
 
 #[cfg(test)]

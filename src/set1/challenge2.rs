@@ -1,9 +1,9 @@
-use crate::utils::helper_functions;
+use crate::utils::*;
 use std::iter::zip;
 
 pub fn xorInputs(inp1: &str, inp2: &str) -> String {
-    let bytes_1 =helper_functions::hex_str_to_bytes(inp1);
-    let bytes_2 = helper_functions::hex_str_to_bytes(inp2);
+    let bytes_1 =hex::hex_str_to_bytes(inp1);
+    let bytes_2 = hex::hex_str_to_bytes(inp2);
 
     let mut xored: Vec<u8> = Vec::new();
 
@@ -11,7 +11,7 @@ pub fn xorInputs(inp1: &str, inp2: &str) -> String {
         xored.push(bytes.0 ^ bytes.1);
     }
 
-    return helper_functions::bytes_to_hex_str(xored)
+    return hex::bytes_to_hex_str(xored)
 }
 
 #[cfg(test)]

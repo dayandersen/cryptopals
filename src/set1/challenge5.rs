@@ -1,4 +1,4 @@
-use crate::utils::helper_functions;
+use crate::utils::*;
 
 
 
@@ -12,7 +12,7 @@ I go crazy when I hear a cymbal";
         xored.push(byte ^ xor[count % 3]);
         count += 1
     }
-    return helper_functions::bytes_to_hex_str(xored);
+    return hex::bytes_to_hex_str(xored);
 }
 
 #[cfg(test)]

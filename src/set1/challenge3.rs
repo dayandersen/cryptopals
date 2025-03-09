@@ -1,71 +1,83 @@
 use std::collections::HashMap;
 use std::str;
-use std::ascii;
 
-use crate::utils::helper_functions;
+use crate::utils::*;
 
 
+pub struct XorScoreResp {
+    word: String,
+    score: f32,
+    xor_key: u8,
+}
 
 pub fn single_char_xor_decryption(inp: &str) -> String{
-    let bytes = helper_functions::hex_str_to_bytes(inp);
-    return single_char_xor_decryption_helper(bytes);
+    let bytes = hex::hex_str_to_bytes(inp);
+    return single_char_xor_decryption_helper(bytes).word;
 }
 
 pub fn single_char_xor_decryption_char_array(inp: &[char]) -> String {
-    let bytes = helper_functions::hex_char_array_to_bytes(inp);
-    return single_char_xor_decryption_helper(bytes);
+    let bytes = hex::hex_char_array_to_bytes(inp);
+    return single_char_xor_decryption_helper(bytes).word;
+}
+
+pub fn single_char_xor_decryption_xor_key(bytes: Vec<u8>) -> u8 {
+    single_char_xor_decryption_helper(bytes).xor_key
 }
 
 
-pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> String {
-    let mut options: Vec<Vec<u8>> = Vec::new();
-    for i in 0..=u8::MAX as u8 {
+pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> XorScoreResp {
+    let mut likely_word: String = "".to_string();
+    let mut likely_word_score = f32::MAX;
+    let mut best_xor: u8 = 0;
+    for xor_key in 0..=u8::MAX as u8 {
         let mut curr = Vec::new();
         for byte in &bytes {
-            curr.push(byte ^ i);
+            curr.push(byte ^ xor_key);
         }
-        options.push(curr)
-    }
-    let mut likely_word: &str = "";
-    let mut likely_word_score = 100000.0;
-    let mut likelies: Vec<&str> = Vec::new();
-    for option in &options {
-        let curr_word: &str;
-        match str::from_utf8(option) {
-            Ok(v) => curr_word = v,
+
+        let curr_word = match str::from_utf8(&curr) {
+            Ok(v) => v,
             Err(e) => continue
-
-        }
+        };
         let curr_word_score = generate_string_score(curr_word);
-
-        if curr_word_score < likely_word_score {
-            likely_word = curr_word;
+    
+        if curr_word_score <= likely_word_score {
+            likely_word = curr_word.to_string();
             likely_word_score = curr_word_score;
+            best_xor = xor_key;
         }
     }
 
-    return likely_word.to_string();
+    return XorScoreResp {
+        word: likely_word,
+        score: likely_word_score,
+        xor_key: best_xor,
+    }
 }
 
 pub fn generate_string_score(inp: &str) -> f32 {
-
     let mut frequency_map: HashMap<char, f32> = HashMap::new();
-
-    for tup in CHARS_TO_FREQUENCY {
-        frequency_map.insert(tup.0, tup.1);
+    
+    for &(c, freq) in CHARS_TO_FREQUENCY {
+        frequency_map.insert(c, freq / 100.0);
     }
 
     let (chars_to_counts, num_valid_chars) = generate_char_counts(inp, &frequency_map);
-    if num_valid_chars != inp.len() as f32 {
-        return 10000.0;
-    }
 
     let char_frequencies = generate_frequency_map(chars_to_counts, num_valid_chars);
 
     let mut score = 0.0;
+
+    if char_frequencies.keys().len() == 0 {
+        return f32::MAX;
+    }
+
     for tup in char_frequencies {
+        if !frequency_map.contains_key(&tup.0) {
+            return f32::MAX;
+        }
         // TODO: I should probably normalize the char CHARS_TO_FREQUENCY map to sum to 1, not 100
-        score += (frequency_map[&tup.0] - (tup.1*100.0)).abs();
+        score += (frequency_map[&tup.0] - tup.1).abs();
     }
 
     return score;
@@ -125,6 +137,7 @@ mod tests {
             summ += tup.1
         }
         println!("{}", summ);
+        let mut frequency_map: HashMap<char, f32> = HashMap::new();
     }
 
     #[test]
@@ -170,58 +183,85 @@ mod tests {
     }
 }
 const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
-    (' ', 16.5),  // Adjusted to balance total
-    ('E', 10.2),  // Scaled
-    ('T', 7.7),   // Scaled
-    ('A', 6.9),   // Scaled
-    ('O', 6.5),   // Scaled
-    ('I', 6.2),   // Scaled
-    ('N', 5.9),   // Scaled
-    ('S', 5.3),   // Scaled
-    ('H', 5.0),   // Scaled
-    ('R', 5.0),   // Scaled
-    ('D', 3.7),   // Scaled
-    ('L', 3.4),   // Scaled
-    ('C', 2.3),   // Scaled
-    ('U', 2.4),   // Scaled
-    ('M', 2.2),   // Scaled
-    ('W', 1.8),   // Scaled
-    ('F', 2.0),   // Scaled
-    ('G', 1.7),   // Scaled
-    ('Y', 1.8),   // Scaled
-    ('P', 1.5),   // Scaled
-    ('B', 1.3),   // Scaled
-    ('V', 0.9),   // Scaled
-    ('K', 0.6),   // Scaled
-    ('J', 0.1),   // Maintained
-    ('X', 0.15),  // Scaled
-    ('Q', 0.1),   // Maintained
-    ('Z', 0.07),  // Maintained
-    ('.', 0.8),   // Adjusted
-    (',', 0.5),   // Adjusted
-    ('!', 0.04),  // Adjusted
-    ('?', 0.08),  // Adjusted
-    ('\'', 0.4),  // Adjusted
-    ('"', 0.18),  // Adjusted
-    ('<', 0.01),  // Maintained
-    ('>', 0.01),  // Maintained
-    ('(', 0.24),  // Adjusted
-    ('[', 0.04),  // Adjusted
-    ('{', 0.02),  // Maintained
-    ('@', 0.07),  // Adjusted
-    ('\\', 0.01), // Maintained
-    ('#', 0.06),  // Adjusted
-    ('$', 0.04),  // Adjusted
-    ('%', 0.04),  // Adjusted
-    ('^', 0.01),  // Maintained
-    ('&', 0.04),  // Adjusted
-    ('*', 0.04),  // Adjusted
-    ('-', 0.35),  // Adjusted
-    ('+', 0.04),  // Adjusted
-    ('_', 0.06),  // Adjusted
-    ('=', 0.04),  // Adjusted
-    ('|', 0.01),  // Maintained
-    ('/', 0.12),  // Adjusted
-    (';', 0.08),  // Adjusted
-    (':', 0.12),  // Adjusted
+    (' ', 15.15),
+    ('E', 9.6),
+    ('T', 7.2),
+    ('A', 6.5),
+    ('O', 6.0),
+    ('I', 5.7),
+    ('N', 5.5),
+    ('S', 5.0),
+    ('R', 4.7),
+    ('H', 4.7),
+    ('D', 3.4),
+    ('L', 3.1),
+    ('C', 2.1),
+    ('U', 2.2),
+    ('M', 2.0),
+    ('W', 1.6),
+    ('F', 1.8),
+    ('G', 1.5),
+    ('Y', 1.6),
+    ('P', 1.3),
+    ('B', 1.1),
+    ('V', 0.8),
+    ('K', 0.5),
+    ('J', 0.08),
+    ('X', 0.13),
+    ('Q', 0.08),
+    ('Z', 0.05),
+    ('\n', 1.2),
+    ('\t', 0.3),
+    ('\r', 0.1),
+    ('.', 0.7),
+    (',', 0.45),
+    ('!', 0.04),
+    ('?', 0.07),
+    ('\'', 0.35),
+    ('"', 0.15),
+    ('<', 0.01),
+    ('>', 0.01),
+    ('(', 0.2),
+    ('[', 0.04),
+    ('{', 0.02),
+    ('@', 0.06),
+    ('\\', 0.01),
+    ('#', 0.05),
+    ('$', 0.04),
+    ('%', 0.04),
+    ('^', 0.01),
+    ('&', 0.04),
+    ('*', 0.04),
+    ('-', 0.3),
+    ('+', 0.04),
+    ('_', 0.05),
+    ('=', 0.04),
+    ('|', 0.01),
+    ('/', 0.1),
+    (';', 0.07),
+    (':', 0.1),
+    ('0', 0.28),
+    ('1', 0.38),
+    ('2', 0.24),
+    ('3', 0.19),
+    ('4', 0.14),
+    ('5', 0.14),
+    ('6', 0.11),
+    ('7', 0.11),
+    ('8', 0.11),
+    ('9', 0.11),
+    ('~', 0.01),
+    ('`', 0.01),
+    ('°', 0.01),
+    ('±', 0.01),
+    ('•', 0.02),
+    ('…', 0.03),
+    ('£', 0.01),
+    ('€', 0.01),
+    ('¥', 0.005),
+    ('©', 0.01),
+    ('®', 0.01),
+    ('™', 0.01),
+    ('§', 0.005),
+    ('¶', 0.005),
 ];
