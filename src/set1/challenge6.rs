@@ -1,24 +1,43 @@
-use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*};
+use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1::challenge3::*};
+
 
 pub fn turning_up_the_heat() {
-    // INPUT_STR
-    //try values from 2 to (say) 40. 
-    // base64::base64_char_to_bytes(c);
-    
     let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
-    // let distances_and_key_size = normalized_edit_distances_to_key_size(inp_str_bytes);
     let distance_and_key_size_four = normalized_edit_distances_to_key_size_four_v(inp_str_bytes.clone());
+    let key_sizes_to_attempt = 10;
+    let mut xor_keys = Vec::new();
+    for _ in 0..key_sizes_to_attempt {
+        xor_keys.push(Vec::new());
+    }
 
-    for distance_to_key_size_tup in &distance_and_key_size_four[0..10] {
-        println!("Generating XORs for keysize: {}", distance_to_key_size_tup.1);
+    for i in 0..key_sizes_to_attempt {
+        let distance_to_key_size_tup = distance_and_key_size_four[i];
         let key_size = distance_to_key_size_tup.1;
         let blocks = generate_byte_blocks_v(inp_str_bytes.clone(), key_size as usize);
-
         for block in blocks {
-            print!("{}", single_char_xor_decryption_xor_key(block) as char)
+            xor_keys[i].push(single_char_xor_decryption_xor_key(block) as char);
         }
-        println!();
     }
+    
+    let mut score_to_key_as_string = Vec::new();
+    for xor_key in xor_keys {
+        let xor_key_as_string = xor_key.iter().collect::<String>();
+        score_to_key_as_string.push((generate_string_score_heap(&xor_key_as_string), xor_key_as_string.clone()));
+    }
+
+    score_to_key_as_string.sort_by(|a,b| a.0.partial_cmp(&b.0).unwrap());
+
+    println!("score_to_key_as_string.0 : {} , score_to_key_as_string.1: {}", score_to_key_as_string[0].0, score_to_key_as_string[0].1);
+
+    let mut count = 0;
+    let best_key = score_to_key_as_string[0].1.bytes().collect::<Vec<u8>>();
+    let mut plaintext = Vec::new();
+
+    for b in inp_str_bytes {
+        plaintext.push((b ^ best_key[count % best_key.len()]) as char);
+        count += 1
+    }
+    println!("decrypted text: {}", plaintext.iter().collect::<String>())
 }
 
 
@@ -103,6 +122,21 @@ mod tests {
     }
 
     #[test]
+    pub fn it_work_1() {
+        let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
+        let keys:Vec<u8> = "TErMinator X: BRing thE noise".bytes().collect::<Vec<u8>>();
+        // let keys:Vec<u8> = "Terminator X: Bring the noise".bytes().collect::<Vec<u8>>();
+        
+
+        let mut count = 0;
+
+        for b in inp_str_bytes {
+            print!("{}", (b ^ keys[count % 29]) as char);
+            count += 1
+        }
+    }
+
+    #[test]
     pub fn generate_byte_blocks_test() {
         let bytes = [1,2,3,4,5];
         let res = generate_byte_blocks(&bytes, 2);
@@ -119,8 +153,13 @@ mod tests {
 
     #[test]
     pub fn normalized_edit_distances_to_key_size_test() {
-        let key_distances_four = normalized_edit_distances_to_key_size_four(INPUT_STR.as_bytes());
-        let key_distances = normalized_edit_distances_to_key_size(INPUT_STR.as_bytes());
+        let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
+        let key_distances_four = normalized_edit_distances_to_key_size_four(&inp_str_bytes);
+        let key_distances = normalized_edit_distances_to_key_size(&inp_str_bytes);
+
+        for tup in key_distances_four {
+            println!("tup.0 {}, tup.1 {}", tup.0, tup.1);
+        }
 
     }
 }

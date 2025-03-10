@@ -1,11 +1,11 @@
+use core::str;
 use std::collections::HashMap;
-use std::str;
 
 use crate::utils::*;
 
 
 pub struct XorScoreResp {
-    word: String,
+    pub word: String,
     score: f32,
     xor_key: u8,
 }
@@ -24,7 +24,6 @@ pub fn single_char_xor_decryption_xor_key(bytes: Vec<u8>) -> u8 {
     single_char_xor_decryption_helper(bytes).xor_key
 }
 
-
 pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> XorScoreResp {
     let mut likely_word: String = "".to_string();
     let mut likely_word_score = f32::MAX;
@@ -41,7 +40,7 @@ pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> XorScoreResp {
         };
         let curr_word_score = generate_string_score(curr_word);
     
-        if curr_word_score <= likely_word_score {
+        if curr_word_score < likely_word_score {
             likely_word = curr_word.to_string();
             likely_word_score = curr_word_score;
             best_xor = xor_key;
@@ -55,6 +54,7 @@ pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> XorScoreResp {
     }
 }
 
+
 pub fn generate_string_score(inp: &str) -> f32 {
     let mut frequency_map: HashMap<char, f32> = HashMap::new();
     
@@ -67,7 +67,7 @@ pub fn generate_string_score(inp: &str) -> f32 {
     let char_frequencies = generate_frequency_map(chars_to_counts, num_valid_chars);
 
     let mut score = 0.0;
-
+    let char_count:f32 = char_frequencies.values().sum();
     if char_frequencies.keys().len() == 0 {
         return f32::MAX;
     }
@@ -76,11 +76,39 @@ pub fn generate_string_score(inp: &str) -> f32 {
         if !frequency_map.contains_key(&tup.0) {
             return f32::MAX;
         }
-        // TODO: I should probably normalize the char CHARS_TO_FREQUENCY map to sum to 1, not 100
         score += (frequency_map[&tup.0] - tup.1).abs();
     }
+    
+    // Division by 0 handled by key check. If there is at least 1 key there will be at least 1 value
+    return score / char_count;
+}
 
-    return score;
+pub fn generate_string_score_heap(inp: &String) -> f32 {
+    let mut frequency_map: HashMap<char, f32> = HashMap::new();
+    
+    for &(c, freq) in CHARS_TO_FREQUENCY {
+        frequency_map.insert(c, freq / 100.0);
+    }
+
+    let (chars_to_counts, num_valid_chars) = generate_char_counts(inp, &frequency_map);
+
+    let char_frequencies = generate_frequency_map(chars_to_counts, num_valid_chars);
+
+    let mut score = 0.0;
+    let char_count:f32 = char_frequencies.values().sum();
+    if char_frequencies.keys().len() == 0 {
+        return f32::MAX;
+    }
+
+    for tup in char_frequencies {
+        if !frequency_map.contains_key(&tup.0) {
+            return f32::MAX;
+        }
+        score += (frequency_map[&tup.0] - tup.1).abs();
+    }
+    
+    // Division by 0 handled by key check. If there is at least 1 key there will be at least 1 value
+    return score / char_count;
 }
 
 fn generate_frequency_map(chars_to_count: HashMap<char, f32>, total_num: f32) -> HashMap<char, f32> {
@@ -136,7 +164,6 @@ mod tests {
         for tup in CHARS_TO_FREQUENCY {
             summ += tup.1
         }
-        println!("{}", summ);
         let mut frequency_map: HashMap<char, f32> = HashMap::new();
     }
 
@@ -159,7 +186,6 @@ mod tests {
         assert_eq!(*val_1_char_counts.get(&'O').unwrap(), 5.0);
         assert_eq!(*val_2_char_counts.get(&' ').unwrap(), 6.0);
         assert_eq!(*val_2_char_counts.get(&'O').unwrap(), 5.0);
-        
     }
 
     #[test]
@@ -169,17 +195,14 @@ mod tests {
 
     #[test]
     pub fn generate_string_score_test() {
-        let val_1 = "CookingMC'slikeapoundofbacon";
-        let val_2 = "Cooking MC's like a pound of bacon";
-        let string_score_val_1 = generate_string_score(val_1);
-        let string_score_val_2 = generate_string_score(val_2);
+        assert!(generate_string_score("CookingMC'slikeapoundofbacon") > generate_string_score("Cooking MC's like a pound of bacon"));
+        assert_eq!(generate_string_score("aa"), generate_string_score("aaa"));
 
-        assert_ne!(string_score_val_1, string_score_val_2);
-
-        println!("string_score_val_1: {string_score_val_1}");
-        println!("string_score_val_2: {string_score_val_2}");
-
-        assert!(string_score_val_1 > string_score_val_2)
+        let correct_string_score = generate_string_score("TErMinator X: BRing thE noise");
+        let slightly_incorrect_string_score = generate_string_score("Terminator X: Bring the noise");
+        println!("correct_string_score: {}", correct_string_score);
+        println!("slightly_incorrect_string_score: {}", slightly_incorrect_string_score);
+        assert!(slightly_incorrect_string_score > correct_string_score);
     }
 }
 const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
