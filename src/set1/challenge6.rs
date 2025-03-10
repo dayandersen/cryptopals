@@ -1,4 +1,4 @@
-use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1::challenge3::*};
+use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1::challenge3::*, set1::challenge4::*};
 
 
 pub fn turning_up_the_heat() -> String {
@@ -23,19 +23,14 @@ pub fn turning_up_the_heat() -> String {
     
     // Generate string score for each xor key, correct key is likely to have lowest score
     // I.e. be the most similar to standard english
-    let mut score_to_key_as_string = Vec::new();
-    for xor_key in potential_xor_keys {
-        let xor_key_as_string = xor_key.iter().collect::<String>();
-        score_to_key_as_string.push((generate_string_score(&xor_key_as_string), xor_key_as_string.clone()));
-    }
+    let best_key = find_the_most_likely_xored_string(
+        potential_xor_keys.iter().map(|chars| chars.iter().collect::<String>()).collect()
+    );
 
-    score_to_key_as_string.sort_by(|a,b| a.0.partial_cmp(&b.0).unwrap());
-    let best_key = score_to_key_as_string[0].1.bytes().collect::<Vec<u8>>();
-    
     let mut count = 0;
     let mut plaintext = Vec::new();
     for b in inp_str_bytes {
-        plaintext.push((b ^ best_key[count % best_key.len()]) as char);
+        plaintext.push((b ^ best_key.as_bytes()[count % best_key.len()]) as char);
         count += 1
     }
     
@@ -89,15 +84,7 @@ mod tests {
 
     #[test]
     pub fn it_work() {
-        let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
-        let keys:Vec<u8> = "TErMinator X: BRing thE noise".bytes().collect::<Vec<u8>>();
-
-        let mut count = 0;
-
-        for b in inp_str_bytes {
-            print!("{}", (b ^ keys[count % 29]) as char);
-            count += 1
-        }
+        println!("{}", turning_up_the_heat());
     }
 
     #[test]

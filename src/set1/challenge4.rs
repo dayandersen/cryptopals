@@ -10,6 +10,10 @@ pub fn find_the_xored_string() -> String {
         potentials.push(challenge3::single_char_xor_decryption(&thing.iter().collect::<String>()));
     }
 
+    return find_the_most_likely_xored_string(potentials);
+}
+
+pub fn find_the_most_likely_xored_string(potentials: Vec<String>) -> String{
     let mut likely: String = String::new();
     let mut likely_score = 100000.0;
     for s in potentials {
