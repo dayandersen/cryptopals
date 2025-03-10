@@ -1,73 +1,47 @@
 use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1::challenge3::*};
 
 
-pub fn turning_up_the_heat() {
+pub fn turning_up_the_heat() -> String {
     let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
-    let distance_and_key_size_four = normalized_edit_distances_to_key_size_four_v(inp_str_bytes.clone());
+    let distance_and_key_size = normalized_edit_distances_to_key_size(inp_str_bytes.clone());
     let key_sizes_to_attempt = 10;
-    let mut xor_keys = Vec::new();
+    let mut potential_xor_keys = Vec::new();
+    
     for _ in 0..key_sizes_to_attempt {
-        xor_keys.push(Vec::new());
+        potential_xor_keys.push(Vec::new());
     }
 
+    // Generate potential xor keys and collect them
     for i in 0..key_sizes_to_attempt {
-        let distance_to_key_size_tup = distance_and_key_size_four[i];
-        let key_size = distance_to_key_size_tup.1;
-        let blocks = generate_byte_blocks_v(inp_str_bytes.clone(), key_size as usize);
+        let distance_to_key_size_tup = distance_and_key_size[i];
+        let blocks = generate_byte_blocks_v(inp_str_bytes.clone(), distance_to_key_size_tup.1 as usize);
         for block in blocks {
-            xor_keys[i].push(single_char_xor_decryption_xor_key(block) as char);
+            potential_xor_keys[i].push(single_char_xor_decryption_xor_key(block) as char);
         }
     }
     
+    // Generate string score for each xor key, correct key is likely to have lowest score
+    // I.e. be the most similar to standard english
     let mut score_to_key_as_string = Vec::new();
-    for xor_key in xor_keys {
+    for xor_key in potential_xor_keys {
         let xor_key_as_string = xor_key.iter().collect::<String>();
         score_to_key_as_string.push((generate_string_score_heap(&xor_key_as_string), xor_key_as_string.clone()));
     }
 
     score_to_key_as_string.sort_by(|a,b| a.0.partial_cmp(&b.0).unwrap());
-
-    println!("score_to_key_as_string.0 : {} , score_to_key_as_string.1: {}", score_to_key_as_string[0].0, score_to_key_as_string[0].1);
-
-    let mut count = 0;
     let best_key = score_to_key_as_string[0].1.bytes().collect::<Vec<u8>>();
+    
+    let mut count = 0;
     let mut plaintext = Vec::new();
-
     for b in inp_str_bytes {
         plaintext.push((b ^ best_key[count % best_key.len()]) as char);
         count += 1
     }
-    println!("decrypted text: {}", plaintext.iter().collect::<String>())
-}
-
-
-fn normalized_edit_distances_to_key_size(inp_bytes: &[u8]) -> Vec<(u32,u32)>{
-    let mut distances_and_key_size: Vec<(u32, u32)> = Vec::new();
     
-    for key_size in 2..40 {
-
-        let mut distances:Vec<u32> = Vec::new();
-
-        for i in (0..160/key_size).step_by(key_size*2) {
-            distances.push(helper_functions::hamming_distance_bytes(
-                &inp_bytes[i.. i +key_size], 
-                &inp_bytes[i+key_size..i + key_size * 2]
-            ) * 1000)
-        }
-        
-        distances_and_key_size.push(((distances.iter().sum::<u32>())/(key_size * distances.len()) as u32 , key_size as u32));
-    }
-
-    distances_and_key_size.sort();
-    return distances_and_key_size;
+    return plaintext.iter().collect::<String>();
 }
 
-fn normalized_edit_distances_to_key_size_four(inp_bytes: &[u8]) -> Vec<(u32,u32)>{
-    return normalized_edit_distances_to_key_size_four_v(inp_bytes.to_vec())
-}
-
-
-fn normalized_edit_distances_to_key_size_four_v(inp_bytes: Vec<u8>) -> Vec<(u32,u32)>{
+fn normalized_edit_distances_to_key_size(inp_bytes: Vec<u8>) -> Vec<(u32,u32)>{
     let mut distances_and_key_size: Vec<(u32, u32)> = Vec::new();
     
     for key_size in 2..40 {
@@ -118,15 +92,8 @@ mod tests {
 
     #[test]
     pub fn it_work() {
-        turning_up_the_heat()
-    }
-
-    #[test]
-    pub fn it_work_1() {
         let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
         let keys:Vec<u8> = "TErMinator X: BRing thE noise".bytes().collect::<Vec<u8>>();
-        // let keys:Vec<u8> = "Terminator X: Bring the noise".bytes().collect::<Vec<u8>>();
-        
 
         let mut count = 0;
 
@@ -149,18 +116,6 @@ mod tests {
         assert_eq!(res[0], Vec::from([1,4,7]));
         assert_eq!(res[1], Vec::from([2,5,8]));
         assert_eq!(res[2], Vec::from([3,6,9]));
-    }
-
-    #[test]
-    pub fn normalized_edit_distances_to_key_size_test() {
-        let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
-        let key_distances_four = normalized_edit_distances_to_key_size_four(&inp_str_bytes);
-        let key_distances = normalized_edit_distances_to_key_size(&inp_str_bytes);
-
-        for tup in key_distances_four {
-            println!("tup.0 {}, tup.1 {}", tup.0, tup.1);
-        }
-
     }
 }
 
