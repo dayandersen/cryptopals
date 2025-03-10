@@ -75,12 +75,15 @@ pub fn hex_char_to_byte(c: char) -> u8 {
 
 #[cfg(test)]
 mod tests {
+
+    use crate::utils::base64::bytes_to_base_64_str;
+
     use super::*;
 
 
     #[test]
     fn hex_str_base_64_str_test() {
-        assert_eq!(base64::bytes_to_base_64_str(false,  hex_str_to_bytes("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")), "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")
+        assert_eq!(bytes_to_base_64_str(false,  hex_str_to_bytes("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d")), "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t")
     }
 
     #[test]
@@ -97,24 +100,24 @@ mod tests {
         // 1000000100100000010
         // 0100 1001 0010 0000
         // assert_eq!(bytes_to_base_64_str(false, Vec::from([0b0000,0b0000,0b0000])), "AAA");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b01001001, 0b00100111, 0b01101101, 0b00100000, 0b01101011, 0b01101001, 0b01101100, 0b01101100, 0b01101001, 0b01101110, 0b01100111, 0b00100000, 0b01111001, 0b01101111, 0b01110101, 0b01110010, 0b00100000, 0b01100010, 0b01110010, 0b01100001, 0b01101001, 0b01101110, 0b00100000, 0b01101100, 0b01101001, 0b01101011, 0b01100101, 0b00100000, 0b01100001, 0b00100000, 0b01110000, 0b01101111, 0b01101001, 0b01110011, 0b01101111, 0b01101110, 0b01101111, 0b01110101, 0b01110011, 0b00100000, 0b01101101, 0b01110101, 0b01110011, 0b01101000, 0b01110010, 0b01101111, 0b01101111, 0b01101101])),
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b01001001, 0b00100111, 0b01101101, 0b00100000, 0b01101011, 0b01101001, 0b01101100, 0b01101100, 0b01101001, 0b01101110, 0b01100111, 0b00100000, 0b01111001, 0b01101111, 0b01110101, 0b01110010, 0b00100000, 0b01100010, 0b01110010, 0b01100001, 0b01101001, 0b01101110, 0b00100000, 0b01101100, 0b01101001, 0b01101011, 0b01100101, 0b00100000, 0b01100001, 0b00100000, 0b01110000, 0b01101111, 0b01101001, 0b01110011, 0b01101111, 0b01101110, 0b01101111, 0b01110101, 0b01110011, 0b00100000, 0b01101101, 0b01110101, 0b01110011, 0b01101000, 0b01110010, 0b01101111, 0b01101111, 0b01101101])),
         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
         // ;
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b01001101, 0b01100001, 0b01101110])),
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b01001101, 0b01100001, 0b01101110])),
         "TWFu");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111_1111])), "/w");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_1111,0b1111_1111])), "////");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_1111])), "//8");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111])), "8P///w");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111])), "/w");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_1111,0b1111_1111])), "////");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_1111])), "//8");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111])), "8P///w");
         // assert_eq!(bytes_to_base_64_str(false, Vec::from([0b0000,0b0000,0b0000])), "AAA");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([])), "");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111])), "Dw");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111,0b1111_1111])), "/w//");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_0000])), "//A");
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111,0b1111_0000,0b1111_1111,0b0000_1111,0b1111_1111])), "8P////D/D/8");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([])), "");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111])), "Dw");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111,0b1111_1111])), "/w//");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_1111,0b1111_0000])), "//A");
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b1111_0000,0b1111_1111,0b1111_1111,0b1111_1111,0b1111_0000,0b1111_1111,0b0000_1111,0b1111_1111])), "8P////D/D/8");
 
         let test_str: &str = "Its+all+OgRe+now";
-        assert_eq!(base64::bytes_to_base_64_str(false, Vec::from([0b00100010, 0b11011011, 0b00111110, 0b01101010, 0b01011001, 0b01111110, 0b00111010, 0b00000100, 0b01011110, 0b11111010, 0b01111010, 0b00110000])), test_str);
+        assert_eq!(bytes_to_base_64_str(false, Vec::from([0b00100010, 0b11011011, 0b00111110, 0b01101010, 0b01011001, 0b01111110, 0b00111010, 0b00000100, 0b01011110, 0b11111010, 0b01111010, 0b00110000])), test_str);
     }
 
     #[test]

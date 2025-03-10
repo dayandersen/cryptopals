@@ -1,4 +1,3 @@
-
 pub fn base64_char_to_bytes(c: char) -> u8 {
     match c {
         'A'..='Z' => c as u8 - b'A',
@@ -11,13 +10,7 @@ pub fn base64_char_to_bytes(c: char) -> u8 {
 }
 
 pub fn base64_str_to_bytes(inp: &str) -> Vec<u8> {
-    base64_str_to_bytes_str(inp.to_string())
-}
-
-pub fn base64_str_to_bytes_str(inp: String) -> Vec<u8> {
     let mut bytes:Vec<u8> = Vec::new();
-
-    
     //Grab 4 chars at a time, as each char is 6 bits
     // Smoosh those 6 bits together into 3 bytes
     for chunk in inp.as_bytes().chunks(4) {
@@ -121,7 +114,6 @@ pub fn bytes_to_base_64_str(add_padding: bool, inp: Vec<u8>) -> String {
             }
             
         }
-        println!("combined in binary was: {}", format!("{combined:b}"))
     }
     ret
 }
@@ -129,6 +121,8 @@ pub fn bytes_to_base_64_str(add_padding: bool, inp: Vec<u8>) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::binary::binary_str_to_bytes;
+
     use super::*;
 
     #[test]
@@ -146,9 +140,9 @@ mod tests {
 
     #[test]
     fn base64_str_to_bytes_test() {
-        assert_eq!(base64_str_to_bytes("TWFu"), binary::binary_str_to_bytes("010011010110000101101110"));
+        assert_eq!(base64_str_to_bytes("TWFu"), binary_str_to_bytes("010011010110000101101110"));
         let test_str = "Its+all+OgRe+now";
-        let binary = binary::binary_str_to_bytes("00100010 11011011 00111110 01101010 01011001 01111110 00111010 00000100 01011110 11111010 01111010 00110000");
+        let binary = binary_str_to_bytes("00100010 11011011 00111110 01101010 01011001 01111110 00111010 00000100 01011110 11111010 01111010 00110000");
         assert_eq!(base64_str_to_bytes(test_str), binary);
     }
 

@@ -2,7 +2,7 @@ use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1
 
 
 pub fn turning_up_the_heat() -> String {
-    let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
+    let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
 
     let distance_and_key_size = normalized_edit_distances_to_key_size(inp_str_bytes.clone());
     let key_sizes_to_attempt = 10;
