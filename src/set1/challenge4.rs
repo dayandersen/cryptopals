@@ -7,7 +7,7 @@ pub fn find_the_xored_string() -> String {
     let mut potentials:Vec<String> = Vec::new();
 
     for thing in vec.chunks(60) {
-        potentials.push(challenge3::single_char_xor_decryption_char_array(thing));
+        potentials.push(challenge3::single_char_xor_decryption(&thing.iter().collect::<String>()));
     }
 
     let mut likely: String = String::new();

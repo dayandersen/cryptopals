@@ -3,6 +3,7 @@ use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1
 
 pub fn turning_up_the_heat() -> String {
     let inp_str_bytes = base64::base64_str_to_bytes_str(INPUT_STR.replace('\n', ""));
+
     let distance_and_key_size = normalized_edit_distances_to_key_size(inp_str_bytes.clone());
     let key_sizes_to_attempt = 10;
     let mut potential_xor_keys = Vec::new();
@@ -14,7 +15,7 @@ pub fn turning_up_the_heat() -> String {
     // Generate potential xor keys and collect them
     for i in 0..key_sizes_to_attempt {
         let distance_to_key_size_tup = distance_and_key_size[i];
-        let blocks = generate_byte_blocks_v(inp_str_bytes.clone(), distance_to_key_size_tup.1 as usize);
+        let blocks = generate_byte_blocks(&inp_str_bytes, distance_to_key_size_tup.1 as usize);
         for block in blocks {
             potential_xor_keys[i].push(single_char_xor_decryption_xor_key(block) as char);
         }
@@ -25,7 +26,7 @@ pub fn turning_up_the_heat() -> String {
     let mut score_to_key_as_string = Vec::new();
     for xor_key in potential_xor_keys {
         let xor_key_as_string = xor_key.iter().collect::<String>();
-        score_to_key_as_string.push((generate_string_score_heap(&xor_key_as_string), xor_key_as_string.clone()));
+        score_to_key_as_string.push((generate_string_score(&xor_key_as_string), xor_key_as_string.clone()));
     }
 
     score_to_key_as_string.sort_by(|a,b| a.0.partial_cmp(&b.0).unwrap());
@@ -65,10 +66,6 @@ fn normalized_edit_distances_to_key_size(inp_bytes: Vec<u8>) -> Vec<(u32,u32)>{
 }
 
 fn generate_byte_blocks(bytes: &[u8], key_size: usize) -> Vec<Vec<u8>> {
-    return generate_byte_blocks_v(bytes.to_vec(), key_size)
-}
-
-fn generate_byte_blocks_v(bytes: Vec<u8>, key_size: usize) -> Vec<Vec<u8>> {
     let mut blocks:Vec<Vec<u8>> = Vec::new();
     for _ in 0..key_size {
         blocks.push(Vec::new());

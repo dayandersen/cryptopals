@@ -6,17 +6,12 @@ use crate::utils::*;
 
 pub struct XorScoreResp {
     pub word: String,
-    score: f32,
-    xor_key: u8,
+    pub score: f32,
+    pub xor_key: u8,
 }
 
-pub fn single_char_xor_decryption(inp: &str) -> String{
+pub fn single_char_xor_decryption(inp: &str) -> String {
     let bytes = hex::hex_str_to_bytes(inp);
-    return single_char_xor_decryption_helper(bytes).word;
-}
-
-pub fn single_char_xor_decryption_char_array(inp: &[char]) -> String {
-    let bytes = hex::hex_char_array_to_bytes(inp);
     return single_char_xor_decryption_helper(bytes).word;
 }
 
@@ -83,33 +78,6 @@ pub fn generate_string_score(inp: &str) -> f32 {
     return score / char_count;
 }
 
-pub fn generate_string_score_heap(inp: &String) -> f32 {
-    let mut frequency_map: HashMap<char, f32> = HashMap::new();
-    
-    for &(c, freq) in CHARS_TO_FREQUENCY {
-        frequency_map.insert(c, freq / 100.0);
-    }
-
-    let (chars_to_counts, num_valid_chars) = generate_char_counts(inp, &frequency_map);
-
-    let char_frequencies = generate_frequency_map(chars_to_counts, num_valid_chars);
-
-    let mut score = 0.0;
-    let char_count:f32 = char_frequencies.values().sum();
-    if char_frequencies.keys().len() == 0 {
-        return f32::MAX;
-    }
-
-    for tup in char_frequencies {
-        if !frequency_map.contains_key(&tup.0) {
-            return f32::MAX;
-        }
-        score += (frequency_map[&tup.0] - tup.1).abs();
-    }
-    
-    // Division by 0 handled by key check. If there is at least 1 key there will be at least 1 value
-    return score / char_count;
-}
 
 fn generate_frequency_map(chars_to_count: HashMap<char, f32>, total_num: f32) -> HashMap<char, f32> {
     let mut frequencies:HashMap<char, f32> = HashMap::new();
