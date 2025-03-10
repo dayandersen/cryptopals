@@ -12,7 +12,7 @@ I go crazy when I hear a cymbal";
         xored.push(byte ^ xor[count % 3]);
         count += 1
     }
-    return hex::bytes_to_hex_str(xored);
+    hex::bytes_to_hex_str(xored)
 }
 
 #[cfg(test)]

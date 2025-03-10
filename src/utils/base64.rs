@@ -1,18 +1,17 @@
-use crate::utils::*;
 
 pub fn base64_char_to_bytes(c: char) -> u8 {
-    return match c {
-        'A'..='Z' => c as u8 - 'A' as u8,
-        'a'..='z' => c as u8 - 'a' as u8 + 26,
-        '0'..='9' => c as u8 - '0' as u8 + 52,
+    match c {
+        'A'..='Z' => c as u8 - b'A',
+        'a'..='z' => c as u8 - b'a' + 26,
+        '0'..='9' => c as u8 - b'0' + 52,
         '+' => 62,
         '/' => 63,
         _ => panic!("We need to handle ranges better: {}", c)
-    };
+    }
 }
 
 pub fn base64_str_to_bytes(inp: &str) -> Vec<u8> {
-    return base64_str_to_bytes_str(inp.to_string());
+    base64_str_to_bytes_str(inp.to_string())
 }
 
 pub fn base64_str_to_bytes_str(inp: String) -> Vec<u8> {
@@ -54,19 +53,19 @@ pub fn base64_str_to_bytes_str(inp: String) -> Vec<u8> {
         }
     }
 
-    return bytes;
+    bytes
 }
 
 
 pub fn byte_to_base64_char(b: u8) -> char {
-    return match b {
-        0..=25 => (('A' as u8) + b) as char,
-        26..=51 => (('a' as u8) + b - 26) as char,
-        52..=61 => (('0' as u8) + b - 52) as char,
+    match b {
+        0..=25 => (b'A' + b) as char,
+        26..=51 => (b'a' + b - 26) as char,
+        52..=61 => (b'0' + b - 52) as char,
         62 => '+',
         63 => '/',
         _ => panic!("We need to handle ranges better")
-    };
+    }
 }
 
 
@@ -79,7 +78,7 @@ pub fn bytes_to_base_64_str(add_padding: bool, inp: Vec<u8>) -> String {
     for byte_chunk in inp.chunks(3) {
         let mut combined: u32 = 0;
         match byte_chunk.len() {
-            1 => combined |= ((byte_chunk[0] as u32) << 16),
+            1 => combined |= (byte_chunk[0] as u32) << 16,
             2 => combined |= ((byte_chunk[0] as u32) << 16) | ((byte_chunk[1] as u32) << 8),
             3 => combined |= ((byte_chunk[0] as u32) << 16) | ((byte_chunk[1] as u32) << 8) | ((byte_chunk[2] as u32)),
             _ => panic!("Wait, who changed the chunk size on me?")
@@ -124,7 +123,7 @@ pub fn bytes_to_base_64_str(add_padding: bool, inp: Vec<u8>) -> String {
         }
         println!("combined in binary was: {}", format!("{combined:b}"))
     }
-    return ret;
+    ret
 }
 
 

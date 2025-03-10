@@ -12,12 +12,12 @@ pub fn binary_str_to_bytes(inp: &str) -> Vec<u8> {
         // This will be the byte for a single char
         for character_byte in byte_chunk {
             b <<= 1;
-            b |= character_byte - '0' as u8;
+            b |= character_byte - b'0';
         }
         ret.push(b);
     }
 
-    return ret;
+    ret
 }
 
 pub fn get_bits(inp: u32) -> Vec<char>{
@@ -25,7 +25,7 @@ pub fn get_bits(inp: u32) -> Vec<char>{
     for i in (0..=31).rev() {
         bits.push((((inp >> i) & 1) as u8 + 48) as char  )
     }
-    return bits;
+    bits
 }
 
 #[cfg(test)]

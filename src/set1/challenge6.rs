@@ -1,4 +1,4 @@
-use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1::challenge3::*, set1::challenge4::*};
+use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1::challenge4::*};
 
 
 pub fn turning_up_the_heat() -> String {
@@ -34,7 +34,7 @@ pub fn turning_up_the_heat() -> String {
         count += 1
     }
     
-    return plaintext.iter().collect::<String>();
+    plaintext.iter().collect::<String>()
 }
 
 fn normalized_edit_distances_to_key_size(inp_bytes: Vec<u8>) -> Vec<(u32,u32)>{
@@ -57,7 +57,7 @@ fn normalized_edit_distances_to_key_size(inp_bytes: Vec<u8>) -> Vec<(u32,u32)>{
     }
 
     distances_and_key_size.sort();
-    return distances_and_key_size;
+    distances_and_key_size
 }
 
 fn generate_byte_blocks(bytes: &[u8], key_size: usize) -> Vec<Vec<u8>> {
@@ -75,32 +75,7 @@ fn generate_byte_blocks(bytes: &[u8], key_size: usize) -> Vec<Vec<u8>> {
             count += 1
         }
     }
-    return blocks;
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    pub fn it_work() {
-        println!("{}", turning_up_the_heat());
-    }
-
-    #[test]
-    pub fn generate_byte_blocks_test() {
-        let bytes = [1,2,3,4,5];
-        let res = generate_byte_blocks(&bytes, 2);
-        assert_eq!(res[0], Vec::from([0b1,0b11,0b101]));
-        assert_eq!(res[1], Vec::from([0b10,0b100]));
-
-
-        let bytes = [1,2,3,4,5,6,7,8,9];
-        let res = generate_byte_blocks(&bytes, 3);
-        assert_eq!(res[0], Vec::from([1,4,7]));
-        assert_eq!(res[1], Vec::from([2,5,8]));
-        assert_eq!(res[2], Vec::from([3,6,9]));
-    }
+    blocks
 }
 
 
@@ -168,3 +143,28 @@ DBBOFRwOBgA+T04pC0kDElMdC0VXBgYdFkU2CgtNEAEUVBwTWXhTVG5SGg8e
 AB0cRSo+AwgKRSANExlJCBQaBAsANU9TKxFJL0dMHRwRTAtPBRwQMAAATQcB
 FlRlIkw5QwA2GggaR0YBBg5ZTgIcAAw3SVIaAQcVEU8QTyEaYy0fDE4ITlhI
 Jk8DCkkcC3hFMQIEC0EbAVIqCFZBO1IdBgZUVA4QTgUWSR4QJwwRTWM";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn it_work() {
+        println!("{}", turning_up_the_heat());
+    }
+
+    #[test]
+    pub fn generate_byte_blocks_test() {
+        let bytes = [1,2,3,4,5];
+        let res = generate_byte_blocks(&bytes, 2);
+        assert_eq!(res[0], Vec::from([0b1,0b11,0b101]));
+        assert_eq!(res[1], Vec::from([0b10,0b100]));
+
+
+        let bytes = [1,2,3,4,5,6,7,8,9];
+        let res = generate_byte_blocks(&bytes, 3);
+        assert_eq!(res[0], Vec::from([1,4,7]));
+        assert_eq!(res[1], Vec::from([2,5,8]));
+        assert_eq!(res[2], Vec::from([3,6,9]));
+    }
+}

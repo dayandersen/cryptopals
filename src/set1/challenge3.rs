@@ -12,7 +12,7 @@ pub struct XorScoreResp {
 
 pub fn single_char_xor_decryption(inp: &str) -> String {
     let bytes = hex::hex_str_to_bytes(inp);
-    return single_char_xor_decryption_helper(bytes).word;
+    single_char_xor_decryption_helper(bytes).word
 }
 
 pub fn single_char_xor_decryption_xor_key(bytes: Vec<u8>) -> u8 {
@@ -23,7 +23,7 @@ pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> XorScoreResp {
     let mut likely_word: String = "".to_string();
     let mut likely_word_score = f32::MAX;
     let mut best_xor: u8 = 0;
-    for xor_key in 0..=u8::MAX as u8 {
+    for xor_key in 0..=u8::MAX {
         let mut curr = Vec::new();
         for byte in &bytes {
             curr.push(byte ^ xor_key);
@@ -42,7 +42,7 @@ pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> XorScoreResp {
         }
     }
 
-    return XorScoreResp {
+    XorScoreResp {
         word: likely_word,
         score: likely_word_score,
         xor_key: best_xor,
@@ -75,7 +75,7 @@ pub fn generate_string_score(inp: &str) -> f32 {
     }
     
     // Division by 0 handled by key check. If there is at least 1 key there will be at least 1 value
-    return score / char_count;
+    score / char_count
 }
 
 
@@ -86,7 +86,7 @@ fn generate_frequency_map(chars_to_count: HashMap<char, f32>, total_num: f32) ->
         frequencies.insert(tup.0, tup.1 / total_num);
     }
 
-    return  frequencies;
+    frequencies
 }
 
 fn generate_char_counts(inp: &str, frequency_map:&HashMap<char, f32>) -> (HashMap<char, f32>, f32) {
@@ -108,70 +108,16 @@ fn generate_char_counts(inp: &str, frequency_map:&HashMap<char, f32>) -> (HashMa
                 *chars_to_counts.entry('[').or_insert(0.0) += 1.0;
             }
         }
-        else if c.is_ascii_lowercase() {
+        else if frequency_map.contains_key(&c) || c.is_ascii_lowercase() {
             *chars_to_counts.entry(c.to_ascii_uppercase()).or_insert(0.0) += 1.0; 
         }
-        else if frequency_map.contains_key(&c){
-            *chars_to_counts.entry(c.to_ascii_uppercase()).or_insert(0.0) += 1.0;
-        } else {
+        else {
             num_valid_chars -= 1.0;
             continue;
         }
     }
-    return (chars_to_counts, num_valid_chars);
+    (chars_to_counts, num_valid_chars)
 
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    pub fn summ() {
-        let mut summ = 0.0;
-        for tup in CHARS_TO_FREQUENCY {
-            summ += tup.1
-        }
-        let mut frequency_map: HashMap<char, f32> = HashMap::new();
-    }
-
-    #[test]
-    pub fn generate_char_counts_test() {
-        let mut frequency_map: HashMap<char, f32> = HashMap::new();
-
-        for tup in CHARS_TO_FREQUENCY {
-            frequency_map.insert(tup.0, tup.1);
-        }
-
-        let val_1 = "CookingMC'slikeapoundofbacon";
-        let val_2 = "Cooking MC's like a pound of bacon";
-        let (val_1_char_counts, char_count_1) = generate_char_counts(&val_1, &frequency_map);
-        let (val_2_char_counts, char_count_2) = generate_char_counts(&val_2, &frequency_map);
-
-        assert!(!val_1_char_counts.contains_key(&' '));
-        assert_eq!(char_count_1, 28.0);
-        assert_eq!(char_count_2, 34.0);
-        assert_eq!(*val_1_char_counts.get(&'O').unwrap(), 5.0);
-        assert_eq!(*val_2_char_counts.get(&' ').unwrap(), 6.0);
-        assert_eq!(*val_2_char_counts.get(&'O').unwrap(), 5.0);
-    }
-
-    #[test]
-    pub fn do_it() {
-        assert_eq!(single_char_xor_decryption("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"), "Cooking MC's like a pound of bacon");   
-    }
-
-    #[test]
-    pub fn generate_string_score_test() {
-        assert!(generate_string_score("CookingMC'slikeapoundofbacon") > generate_string_score("Cooking MC's like a pound of bacon"));
-        assert_eq!(generate_string_score("aa"), generate_string_score("aaa"));
-
-        let correct_string_score = generate_string_score("TErMinator X: BRing thE noise");
-        let slightly_incorrect_string_score = generate_string_score("Terminator X: Bring the noise");
-        println!("correct_string_score: {}", correct_string_score);
-        println!("slightly_incorrect_string_score: {}", slightly_incorrect_string_score);
-        assert!(slightly_incorrect_string_score > correct_string_score);
-    }
 }
 const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
     (' ', 15.15),
@@ -256,3 +202,55 @@ const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
     ('§', 0.005),
     ('¶', 0.005),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn summ() {
+        let mut summ = 0.0;
+        for tup in CHARS_TO_FREQUENCY {
+            summ += tup.1
+        }
+        let frequency_map: HashMap<char, f32> = HashMap::new();
+    }
+
+    #[test]
+    pub fn generate_char_counts_test() {
+        let mut frequency_map: HashMap<char, f32> = HashMap::new();
+
+        for tup in CHARS_TO_FREQUENCY {
+            frequency_map.insert(tup.0, tup.1);
+        }
+
+        let val_1 = "CookingMC'slikeapoundofbacon";
+        let val_2 = "Cooking MC's like a pound of bacon";
+        let (val_1_char_counts, char_count_1) = generate_char_counts(val_1, &frequency_map);
+        let (val_2_char_counts, char_count_2) = generate_char_counts(val_2, &frequency_map);
+
+        assert!(!val_1_char_counts.contains_key(&' '));
+        assert_eq!(char_count_1, 28.0);
+        assert_eq!(char_count_2, 34.0);
+        assert_eq!(*val_1_char_counts.get(&'O').unwrap(), 5.0);
+        assert_eq!(*val_2_char_counts.get(&' ').unwrap(), 6.0);
+        assert_eq!(*val_2_char_counts.get(&'O').unwrap(), 5.0);
+    }
+
+    #[test]
+    pub fn do_it() {
+        assert_eq!(single_char_xor_decryption("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"), "Cooking MC's like a pound of bacon");   
+    }
+
+    #[test]
+    pub fn generate_string_score_test() {
+        assert!(generate_string_score("CookingMC'slikeapoundofbacon") > generate_string_score("Cooking MC's like a pound of bacon"));
+        assert_eq!(generate_string_score("aa"), generate_string_score("aaa"));
+
+        let correct_string_score = generate_string_score("TErMinator X: BRing thE noise");
+        let slightly_incorrect_string_score = generate_string_score("Terminator X: Bring the noise");
+        println!("correct_string_score: {}", correct_string_score);
+        println!("slightly_incorrect_string_score: {}", slightly_incorrect_string_score);
+        assert!(slightly_incorrect_string_score > correct_string_score);
+    }
+}

@@ -1,4 +1,3 @@
-use crate::utils::*;
 
 // A Hex string is something like A01BCF23
 // We need to map each of these to their corresponding hex val
@@ -16,7 +15,7 @@ pub fn hex_str_to_bytes(inp: &str) -> Vec<u8> {
         }
         
     }
-    return ret
+    ret
 }
 
 pub fn hex_char_array_to_bytes(inp: &[char]) -> Vec<u8> {
@@ -31,14 +30,14 @@ pub fn hex_char_array_to_bytes(inp: &[char]) -> Vec<u8> {
         }
         
     }
-    return ret
+    ret
 }
 
 
 // Converts a given byte to its hex character value
 // TODO: Fix handling for bytes that are outside of hex range.
 pub fn byte_to_hex_char(b: u8) -> char {
-    return match b {
+    match b {
         0..=9 => (b + b'0') as char,
         10..=15 => (b + b'a' - 10) as char,
         _ => panic!("Bad range supplied")
@@ -60,7 +59,7 @@ pub fn bytes_to_hex_str(inp: Vec<u8>) -> String {
 
     }
 
-    return ret;
+    ret
 }
 
 // Converts a given hex character to its bytes value

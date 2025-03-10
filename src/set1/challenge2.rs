@@ -11,7 +11,7 @@ pub fn xorInputs(inp1: &str, inp2: &str) -> String {
         xored.push(bytes.0 ^ bytes.1);
     }
 
-    return hex::bytes_to_hex_str(xored)
+    hex::bytes_to_hex_str(xored)
 }
 
 #[cfg(test)]

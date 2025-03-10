@@ -1,5 +1,4 @@
 use core::panic;
-use std::cmp;
 
 
 
@@ -7,7 +6,7 @@ use std::cmp;
 pub fn hamming_distance(s1: &str, s2: &str) -> u32 {
     let s1_bytes = s1.as_bytes();
     let s2_bytes = s2.as_bytes();
-    return hamming_distance_bytes(s1_bytes, s2_bytes);
+    hamming_distance_bytes(s1_bytes, s2_bytes)
 }
 
 // Count number of bits different
@@ -25,7 +24,7 @@ pub fn hamming_distance_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u32 {
             
         }
     }
-    return dist;
+    dist
     
 }
 
