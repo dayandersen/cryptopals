@@ -6,32 +6,18 @@ use super::challenge4::find_the_most_likely_xored_string;
 pub fn turning_up_the_heat() -> String {
     let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
 
-    let distance_and_key_size = normalized_edit_distances_to_key_size(&inp_str_bytes);
-    let key_sizes_to_attempt = 10;
-    let mut potential_xor_keys = Vec::new();
-    
-    for _ in 0..key_sizes_to_attempt {
-        potential_xor_keys.push(Vec::new());
-    }
+    let distances_to_key_size = normalized_edit_distances_to_key_size(&inp_str_bytes);
+    let mut xor_key = Vec::new();
+    let key_size = distances_to_key_size[0].1 as usize;
 
-    // Generate potential xor keys and collect them
-    for i in 0..key_sizes_to_attempt {
-        let distance_to_key_size_tup = distance_and_key_size[i];
-        let blocks = generate_byte_blocks(&inp_str_bytes, distance_to_key_size_tup.1 as usize);
-        for block in blocks {
-            potential_xor_keys[i].push(single_char_xor_decryption_xor_key(block) as char);
-        }
+    let blocks = generate_byte_blocks(&inp_str_bytes, key_size);
+    for block in blocks {
+        xor_key.push(single_char_xor_decryption_xor_key(block));
     }
     
-    // Generate string score for each xor key, correct key is likely to have lowest score
-    // I.e. be the most similar to standard english
-    let best_key = find_the_most_likely_xored_string(
-        potential_xor_keys.iter().map(|chars| chars.iter().collect::<String>()).collect()
-    );
-
     let mut plaintext = Vec::new();
     for (count, b) in inp_str_bytes.into_iter().enumerate() {
-        plaintext.push((b ^ best_key.as_bytes()[count % best_key.len()]) as char);
+        plaintext.push((b ^ xor_key[count % key_size]) as char);
     }
     
     plaintext.iter().collect::<String>()
