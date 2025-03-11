@@ -5,7 +5,7 @@ pub fn base64_char_to_bytes(c: char) -> u8 {
         '0'..='9' => c as u8 - b'0' + 52,
         '+' => 62,
         '/' => 63,
-        _ => panic!("We need to handle ranges better: {}", c)
+        _ => panic!("We need to handle ranges better: {c}")
     }
 }
 
@@ -17,7 +17,7 @@ pub fn base64_str_to_bytes(inp: &str) -> Vec<u8> {
         let mut thing: u32 = 0;
         let mut count = 0;
         for byte in chunk {
-             thing = thing << 6 | (base64_char_to_bytes(*byte as char) as u32); 
+             thing = thing << 6 | u32::from(base64_char_to_bytes(*byte as char)); 
              count += 1;
         }
 
@@ -66,14 +66,14 @@ pub fn byte_to_base64_char(b: u8) -> char {
 // Base64 means grabbing 6 bits at a time from the byte array and converting them
 // Easiest way to do this is window with size 3 to grab 24 bits at a time 
 // If the last part of the window is not full we can pad with =
-pub fn bytes_to_base_64_str(add_padding: bool, inp: Vec<u8>) -> String {
+pub fn bytes_to_base_64_str(add_padding: bool, inp: &[u8]) -> String {
     let mut ret: String = String::new();
     for byte_chunk in inp.chunks(3) {
         let mut combined: u32 = 0;
         match byte_chunk.len() {
-            1 => combined |= (byte_chunk[0] as u32) << 16,
-            2 => combined |= ((byte_chunk[0] as u32) << 16) | ((byte_chunk[1] as u32) << 8),
-            3 => combined |= ((byte_chunk[0] as u32) << 16) | ((byte_chunk[1] as u32) << 8) | ((byte_chunk[2] as u32)),
+            1 => combined |= u32::from(byte_chunk[0]) << 16,
+            2 => combined |= (u32::from(byte_chunk[0]) << 16) | (u32::from(byte_chunk[1]) << 8),
+            3 => combined |= (u32::from(byte_chunk[0]) << 16) | (u32::from(byte_chunk[1]) << 8) | u32::from(byte_chunk[2]),
             _ => panic!("Wait, who changed the chunk size on me?")
         }
 

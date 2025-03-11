@@ -42,7 +42,7 @@ mod tests {
     fn get_bits_test() {
         let mut result = vec!['0'; 24];
         result.extend(['0','1','0','1','1','0','0','1']);
-        assert_eq!(get_bits(0b01011001), result);
+        assert_eq!(get_bits(0b0101_1001), result);
     }
 
 }
