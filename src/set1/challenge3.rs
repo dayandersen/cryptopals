@@ -1,7 +1,7 @@
 use core::str;
 use std::collections::HashMap;
 
-use crate::utils::*;
+use crate::utils::hex;
 
 
 pub struct XorScoreResp {
@@ -11,27 +11,26 @@ pub struct XorScoreResp {
 }
 
 pub fn single_char_xor_decryption(inp: &str) -> String {
-    let bytes = hex::hex_str_to_bytes(inp);
-    single_char_xor_decryption_helper(bytes).word
+    single_char_xor_decryption_helper(&hex::hex_str_to_bytes(inp)).word
 }
 
-pub fn single_char_xor_decryption_xor_key(bytes: Vec<u8>) -> u8 {
+pub fn single_char_xor_decryption_xor_key(bytes: &[u8]) -> u8 {
     single_char_xor_decryption_helper(bytes).xor_key
 }
 
-pub fn single_char_xor_decryption_helper(bytes: Vec<u8>) -> XorScoreResp {
-    let mut likely_word: String = "".to_string();
+pub fn single_char_xor_decryption_helper(bytes: &[u8]) -> XorScoreResp {
+    let mut likely_word: String = String::new();
     let mut likely_word_score = f32::MAX;
     let mut best_xor: u8 = 0;
     for xor_key in 0..=u8::MAX {
         let mut curr = Vec::new();
-        for byte in &bytes {
+        for byte in bytes {
             curr.push(byte ^ xor_key);
         }
 
         let curr_word = match str::from_utf8(&curr) {
             Ok(v) => v,
-            Err(e) => continue
+            Err(_e) => continue
         };
         let curr_word_score = generate_string_score(curr_word);
     
@@ -119,43 +118,6 @@ fn generate_char_counts(inp: &str, allowable_chars:&HashMap<char, f32>) -> (Hash
 
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    pub fn generate_char_counts_test() {
-        let mut frequency_map: HashMap<char, f32> = HashMap::new();
-
-        for tup in CHARS_TO_FREQUENCY {
-            frequency_map.insert(tup.0, tup.1);
-        }
-
-        let val_1 = "CookingMC'slikeapoundofbacon";
-        let val_2 = "Cooking MC's like a pound of bacon";
-        let (val_1_char_counts, char_count_1) = generate_char_counts(val_1, &frequency_map);
-        let (val_2_char_counts, char_count_2) = generate_char_counts(val_2, &frequency_map);
-
-        assert!(!val_1_char_counts.contains_key(&' '));
-        assert_eq!(char_count_1, 28.0);
-        assert_eq!(char_count_2, 34.0);
-        assert_eq!(*val_1_char_counts.get(&'O').unwrap(), 5.0);
-        assert_eq!(*val_2_char_counts.get(&' ').unwrap(), 6.0);
-        assert_eq!(*val_2_char_counts.get(&'O').unwrap(), 5.0);
-    }
-
-    #[test]
-    pub fn do_it() {
-        assert_eq!(single_char_xor_decryption("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"), "Cooking MC's like a pound of bacon");   
-    }
-
-    #[test]
-    pub fn generate_string_score_test() {
-        assert!(generate_string_score("CookingMC'slikeapoundofbacon") > generate_string_score("Cooking MC's like a pound of bacon"));
-        assert_eq!(generate_string_score("aa"), generate_string_score("aaa"));
-    }
-}
-
 const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
     (' ', 15.15),
     ('E', 9.6),
@@ -239,3 +201,40 @@ const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
     ('§', 0.005),
     ('¶', 0.005),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn generate_char_counts_test() {
+        let mut frequency_map: HashMap<char, f32> = HashMap::new();
+
+        for tup in CHARS_TO_FREQUENCY {
+            frequency_map.insert(tup.0, tup.1);
+        }
+
+        let val_1 = "CookingMC'slikeapoundofbacon";
+        let val_2 = "Cooking MC's like a pound of bacon";
+        let (val_1_char_counts, char_count_1) = generate_char_counts(val_1, &frequency_map);
+        let (val_2_char_counts, char_count_2) = generate_char_counts(val_2, &frequency_map);
+
+        assert!(!val_1_char_counts.contains_key(&' '));
+        assert_eq!(char_count_1, 28.0);
+        assert_eq!(char_count_2, 34.0);
+        assert_eq!(*val_1_char_counts.get(&'O').unwrap(), 5.0);
+        assert_eq!(*val_2_char_counts.get(&' ').unwrap(), 6.0);
+        assert_eq!(*val_2_char_counts.get(&'O').unwrap(), 5.0);
+    }
+
+    #[test]
+    pub fn do_it() {
+        assert_eq!(single_char_xor_decryption("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"), "Cooking MC's like a pound of bacon");   
+    }
+
+    #[test]
+    pub fn generate_string_score_test() {
+        assert!(generate_string_score("CookingMC'slikeapoundofbacon") > generate_string_score("Cooking MC's like a pound of bacon"));
+        assert_eq!(generate_string_score("aa"), generate_string_score("aaa"));
+    }
+}

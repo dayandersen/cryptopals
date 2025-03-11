@@ -1,4 +1,4 @@
-use crate::utils::*;
+use crate::utils::hex;
 
 pub fn xor_string(xor_key: &str, string: &str) -> String {
     

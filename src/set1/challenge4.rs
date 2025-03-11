@@ -13,7 +13,7 @@ pub fn find_the_xored_string(inp: &str) -> String {
     find_the_most_likely_xored_string(potentials)
 }
 
-pub fn find_the_most_likely_xored_string(potentials: Vec<String>) -> String{
+pub fn find_the_most_likely_xored_string(potentials: Vec<String>) -> String {
     let mut likely: String = String::new();
     let mut likely_score = 100_000.0;
     for s in potentials {
@@ -24,17 +24,6 @@ pub fn find_the_most_likely_xored_string(potentials: Vec<String>) -> String{
         }
     }
     likely
-}
-
-#[cfg(test)]
-mod tests {
-
-use super::*;
-
-    #[test]
-    pub fn do_stuff() {
-        assert_eq!("ow that the party is jumping\n=", find_the_xored_string(INPUT_STR));
-    }
 }
 
 
@@ -365,3 +354,14 @@ e03555453d1e31775f37331823164c341c09e310463438481019fb0b12fa
 41053f5cef5f6f56e4f5410a5407281600200b2649460a2e3a3c38492a0c
 4c071a57e9356ee415103c5c53e254063f2019340969e30a2e381d5b2555
 32042f46431d2c44607934ed180c1028136a5f2b26092e3b2c4e2930585a";
+
+#[cfg(test)]
+mod tests {
+
+use super::*;
+
+    #[test]
+    pub fn do_stuff() {
+        assert_eq!("ow that the party is jumping\n=", find_the_xored_string(INPUT_STR));
+    }
+}

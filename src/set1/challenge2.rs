@@ -1,4 +1,4 @@
-use crate::utils::*;
+use crate::utils::hex;
 use std::iter::zip;
 
 pub fn xor_inputs(inp1: &str, inp2: &str) -> String {

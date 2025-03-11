@@ -8,7 +8,7 @@ pub fn solve_vigenere_cipher(inp: &str) -> String {
 
     let blocks = generate_byte_blocks(&inp_str_bytes, key_size);
     for block in blocks {
-        xor_key.push(single_char_xor_decryption_xor_key(block));
+        xor_key.push(single_char_xor_decryption_xor_key(&block));
     }
 
     let mut plaintext = Vec::new();
@@ -52,39 +52,6 @@ fn generate_byte_blocks(bytes: &[u8], key_size: usize) -> Vec<Vec<u8>> {
         }
     }
     blocks
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    pub fn it_work() {
-        println!("{}", solve_vigenere_cipher(INPUT_STR));
-    }
-
-    #[test]
-    pub fn normalized_edit_distances_to_key_size_test() {
-        let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
-        let distance_and_key_size = normalized_edit_distances_to_key_size(&inp_str_bytes);
-        assert_eq!(distance_and_key_size[0].1, 29);
-    }
-
-    #[test]
-    pub fn generate_byte_blocks_test() {
-        let bytes = [1,2,3,4,5];
-        let res = generate_byte_blocks(&bytes, 2);
-        assert_eq!(res[0], Vec::from([0b1,0b11,0b101]));
-        assert_eq!(res[1], Vec::from([0b10,0b100]));
-
-
-        let bytes = [1,2,3,4,5,6,7,8,9];
-        let res = generate_byte_blocks(&bytes, 3);
-        assert_eq!(res[0], Vec::from([1,4,7]));
-        assert_eq!(res[1], Vec::from([2,5,8]));
-        assert_eq!(res[2], Vec::from([3,6,9]));
-    }
 }
 
 
@@ -152,3 +119,36 @@ DBBOFRwOBgA+T04pC0kDElMdC0VXBgYdFkU2CgtNEAEUVBwTWXhTVG5SGg8e
 AB0cRSo+AwgKRSANExlJCBQaBAsANU9TKxFJL0dMHRwRTAtPBRwQMAAATQcB
 FlRlIkw5QwA2GggaR0YBBg5ZTgIcAAw3SVIaAQcVEU8QTyEaYy0fDE4ITlhI
 Jk8DCkkcC3hFMQIEC0EbAVIqCFZBO1IdBgZUVA4QTgUWSR4QJwwRTWM";
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn it_work() {
+        println!("{}", solve_vigenere_cipher(INPUT_STR));
+    }
+
+    #[test]
+    pub fn normalized_edit_distances_to_key_size_test() {
+        let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
+        let distance_and_key_size = normalized_edit_distances_to_key_size(&inp_str_bytes);
+        assert_eq!(distance_and_key_size[0].1, 29);
+    }
+
+    #[test]
+    pub fn generate_byte_blocks_test() {
+        let bytes = [1,2,3,4,5];
+        let res = generate_byte_blocks(&bytes, 2);
+        assert_eq!(res[0], Vec::from([0b1,0b11,0b101]));
+        assert_eq!(res[1], Vec::from([0b10,0b100]));
+
+
+        let bytes = [1,2,3,4,5,6,7,8,9];
+        let res = generate_byte_blocks(&bytes, 3);
+        assert_eq!(res[0], Vec::from([1,4,7]));
+        assert_eq!(res[1], Vec::from([2,5,8]));
+        assert_eq!(res[2], Vec::from([3,6,9]));
+    }
+}

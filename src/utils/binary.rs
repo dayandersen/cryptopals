@@ -1,7 +1,7 @@
 
 
 pub fn binary_str_to_bytes(inp: &str) -> Vec<u8> {
-    let trimmed_str = inp.replace(" ", "");
+    let trimmed_str = inp.replace(' ', "");
     let mut ret:Vec<u8> = Vec::new();
     // We make an assumption here. 
     // The assumption is that every character passed to us only takes a single byte.
@@ -23,7 +23,7 @@ pub fn binary_str_to_bytes(inp: &str) -> Vec<u8> {
 pub fn get_bits(inp: u32) -> Vec<char>{
     let mut bits:Vec<char> = Vec::new();
     for i in (0..=31).rev() {
-        bits.push((((inp >> i) & 1) as u8 + 48) as char  )
+        bits.push((((inp >> i) & 1) as u8 + 48) as char  );
     }
     bits
 }

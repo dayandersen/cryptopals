@@ -1,4 +1,4 @@
-use crate::utils::*;
+use crate::utils::{base64, hex};
 
 //Turn hex into bytes, each entry will be a u4
 //Combine 2 u4s in a u8
