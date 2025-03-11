@@ -1,10 +1,12 @@
-use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::*, set1::challenge4::*};
+use crate::{set1::challenge3::single_char_xor_decryption_xor_key, utils::{base64, helper_functions}};
+
+use super::challenge4::find_the_most_likely_xored_string;
 
 
 pub fn turning_up_the_heat() -> String {
     let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
 
-    let distance_and_key_size = normalized_edit_distances_to_key_size(inp_str_bytes.clone());
+    let distance_and_key_size = normalized_edit_distances_to_key_size(&inp_str_bytes);
     let key_sizes_to_attempt = 10;
     let mut potential_xor_keys = Vec::new();
     
@@ -27,36 +29,30 @@ pub fn turning_up_the_heat() -> String {
         potential_xor_keys.iter().map(|chars| chars.iter().collect::<String>()).collect()
     );
 
-    let mut count = 0;
     let mut plaintext = Vec::new();
-    for b in inp_str_bytes {
+    for (count, b) in inp_str_bytes.into_iter().enumerate() {
         plaintext.push((b ^ best_key.as_bytes()[count % best_key.len()]) as char);
-        count += 1
     }
     
     plaintext.iter().collect::<String>()
 }
 
-fn normalized_edit_distances_to_key_size(inp_bytes: Vec<u8>) -> Vec<(u32,u32)>{
+fn normalized_edit_distances_to_key_size(inp_bytes: &[u8]) -> Vec<(u32,u32)>{
     let mut distances_and_key_size: Vec<(u32, u32)> = Vec::new();
     
-    for key_size in 2..40 {
-
-        let mut distances:Vec<u32> = Vec::new();
-
-        distances.push(helper_functions::hamming_distance_bytes(
-            &inp_bytes[0..key_size], 
-            &inp_bytes[key_size..key_size*2]
-        )* 1000);
-        distances.push(helper_functions::hamming_distance_bytes(
-            &inp_bytes[key_size*2..key_size*3], 
-            &inp_bytes[key_size*3..key_size*4]
-        )* 1000);
+    for key_size in 2..40{
+        let dist = (0..40).step_by(2).map(
+            |i| 
+            helper_functions::hamming_distance_bytes(
+                &inp_bytes[i..i+key_size], 
+                &inp_bytes[i+key_size..i+key_size*2]
+                )* 1000 / u32::try_from(key_size).unwrap() 
+        ).sum::<u32>() ;
         
-        distances_and_key_size.push(((distances.iter().sum::<u32>())/ (key_size * distances.len()) as u32 , key_size as u32));
+        distances_and_key_size.push((dist, u32::try_from(key_size).unwrap()));
     }
 
-    distances_and_key_size.sort();
+    distances_and_key_size.sort_unstable();
     distances_and_key_size
 }
 
@@ -69,13 +65,44 @@ fn generate_byte_blocks(bytes: &[u8], key_size: usize) -> Vec<Vec<u8>> {
     for chunk in bytes.chunks(key_size) {
         // make a block that is the first byte of every block,
         // and a block that is the second byte of every block, and so on. 
-        let mut count = 0;
-        for byte in chunk {
+        for (count, byte) in chunk.iter().enumerate() {
             blocks[count % key_size].push(*byte);
-            count += 1
         }
     }
     blocks
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn it_work() {
+        println!("{}", turning_up_the_heat());
+    }
+
+    #[test]
+    pub fn normalized_edit_distances_to_key_size_test() {
+        let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
+        let distance_and_key_size = normalized_edit_distances_to_key_size(&inp_str_bytes);
+        assert_eq!(distance_and_key_size[0].1, 29);
+    }
+
+    #[test]
+    pub fn generate_byte_blocks_test() {
+        let bytes = [1,2,3,4,5];
+        let res = generate_byte_blocks(&bytes, 2);
+        assert_eq!(res[0], Vec::from([0b1,0b11,0b101]));
+        assert_eq!(res[1], Vec::from([0b10,0b100]));
+
+
+        let bytes = [1,2,3,4,5,6,7,8,9];
+        let res = generate_byte_blocks(&bytes, 3);
+        assert_eq!(res[0], Vec::from([1,4,7]));
+        assert_eq!(res[1], Vec::from([2,5,8]));
+        assert_eq!(res[2], Vec::from([3,6,9]));
+    }
 }
 
 
@@ -143,28 +170,3 @@ DBBOFRwOBgA+T04pC0kDElMdC0VXBgYdFkU2CgtNEAEUVBwTWXhTVG5SGg8e
 AB0cRSo+AwgKRSANExlJCBQaBAsANU9TKxFJL0dMHRwRTAtPBRwQMAAATQcB
 FlRlIkw5QwA2GggaR0YBBg5ZTgIcAAw3SVIaAQcVEU8QTyEaYy0fDE4ITlhI
 Jk8DCkkcC3hFMQIEC0EbAVIqCFZBO1IdBgZUVA4QTgUWSR4QJwwRTWM";
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    pub fn it_work() {
-        println!("{}", turning_up_the_heat());
-    }
-
-    #[test]
-    pub fn generate_byte_blocks_test() {
-        let bytes = [1,2,3,4,5];
-        let res = generate_byte_blocks(&bytes, 2);
-        assert_eq!(res[0], Vec::from([0b1,0b11,0b101]));
-        assert_eq!(res[1], Vec::from([0b10,0b100]));
-
-
-        let bytes = [1,2,3,4,5,6,7,8,9];
-        let res = generate_byte_blocks(&bytes, 3);
-        assert_eq!(res[0], Vec::from([1,4,7]));
-        assert_eq!(res[1], Vec::from([2,5,8]));
-        assert_eq!(res[2], Vec::from([3,6,9]));
-    }
-}
