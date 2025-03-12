@@ -23,17 +23,9 @@ pub fn single_char_xor_decryption_helper(bytes: &[u8]) -> XorScoreResp {
     let mut likely_word_score = f32::MAX;
     let mut best_xor: u8 = 0;
     for xor_key in 0..=u8::MAX {
-        let mut curr = Vec::new();
-        for byte in bytes {
-            curr.push(byte ^ xor_key);
-        }
-
-        let curr_word = match str::from_utf8(&curr) {
-            Ok(v) => v,
-            Err(_e) => continue
-        };
+        let curr =&bytes.iter().map(|byte| byte ^ xor_key).collect::<Vec<u8>>();
+        let Ok(curr_word) = str::from_utf8(curr) else { continue;};
         let curr_word_score = generate_string_score(curr_word);
-    
         if curr_word_score < likely_word_score {
             likely_word = curr_word.to_string();
             likely_word_score = curr_word_score;
