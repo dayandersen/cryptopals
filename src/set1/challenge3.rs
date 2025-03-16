@@ -32,7 +32,6 @@ pub fn single_char_xor_decryption_helper(bytes: &[u8]) -> XorScoreResp {
             best_xor = xor_key;
         }
     }
-
     XorScoreResp {
         word: likely_word,
         score: likely_word_score,
@@ -99,8 +98,8 @@ fn generate_char_counts(inp: &str, allowable_chars:&HashMap<char, f32>) -> (Hash
                 *chars_to_counts.entry('[').or_insert(0.0) += 1.0;
             }
         }
-        else if allowable_chars.contains_key(&c) || c.is_ascii_lowercase() {
-            *chars_to_counts.entry(c.to_ascii_uppercase()).or_insert(0.0) += 1.0; 
+        else if allowable_chars.contains_key(&c){
+            *chars_to_counts.entry(c).or_insert(0.0) += 1.0; 
         }
         else {
             num_valid_chars -= 1.0;
@@ -111,33 +110,59 @@ fn generate_char_counts(inp: &str, allowable_chars:&HashMap<char, f32>) -> (Hash
 }
 
 const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
-    (' ', 15.15),
-    ('E', 9.6),
-    ('T', 7.2),
-    ('A', 6.5),
-    ('O', 6.0),
-    ('I', 5.7),
-    ('N', 5.5),
-    ('S', 5.0),
-    ('R', 4.7),
-    ('H', 4.7),
-    ('D', 3.4),
-    ('L', 3.1),
-    ('C', 2.1),
-    ('U', 2.2),
-    ('M', 2.0),
-    ('W', 1.6),
-    ('F', 1.8),
-    ('G', 1.5),
-    ('Y', 1.6),
-    ('P', 1.3),
-    ('B', 1.1),
-    ('V', 0.8),
-    ('K', 0.5),
-    ('J', 0.08),
-    ('X', 0.13),
-    ('Q', 0.08),
-    ('Z', 0.05),
+    (' ', 15.0),
+    ('e', 8.12),
+    ('t', 5.92),
+    ('a', 5.53),
+    ('o', 5.14),
+    ('i', 4.94),
+    ('n', 4.63),
+    ('s', 4.14),
+    ('r', 3.87),
+    ('h', 3.83),
+    ('l', 2.70),
+    ('d', 2.43),
+    ('c', 2.13),
+    ('u', 1.94),
+    ('m', 1.62),
+    ('w', 1.57),
+    ('f', 1.54),
+    ('g', 1.33),
+    ('y', 1.30),
+    ('p', 1.29),
+    ('b', 1.10),
+    ('v', 0.88),
+    ('k', 0.52),
+    ('j', 0.13),
+    ('x', 0.13),
+    ('q', 0.11),
+    ('z', 0.07),
+    ('E', 0.65),
+    ('T', 0.49),
+    ('A', 0.44),
+    ('O', 0.41),
+    ('I', 0.38),
+    ('N', 0.37),
+    ('S', 0.34),
+    ('R', 0.32),
+    ('H', 0.32),
+    ('D', 0.23),
+    ('L', 0.21),
+    ('C', 0.14),
+    ('U', 0.15),
+    ('M', 0.14),
+    ('W', 0.11),
+    ('F', 0.12),
+    ('G', 0.10),
+    ('Y', 0.11),
+    ('P', 0.09),
+    ('B', 0.07),
+    ('V', 0.05),
+    ('K', 0.03),
+    ('J', 0.01),
+    ('X', 0.01),
+    ('Q', 0.01),
+    ('Z', 0.003),
     ('\n', 1.2),
     ('\t', 0.3),
     ('\r', 0.1),
@@ -150,8 +175,11 @@ const CHARS_TO_FREQUENCY:&[(char, f32)] = &[
     ('<', 0.01),
     ('>', 0.01),
     ('(', 0.2),
+    (')', 0.2),
     ('[', 0.04),
+    (']', 0.04),
     ('{', 0.02),
+    ('}', 0.02),
     ('@', 0.06),
     ('\\', 0.01),
     ('#', 0.05),
@@ -214,9 +242,9 @@ mod tests {
         assert!(!val_1_char_counts.contains_key(&' '));
         assert_eq!(char_count_1, 28.0);
         assert_eq!(char_count_2, 34.0);
-        assert_eq!(*val_1_char_counts.get(&'O').unwrap(), 5.0);
+        assert_eq!(*val_1_char_counts.get(&'o').unwrap(), 5.0);
         assert_eq!(*val_2_char_counts.get(&' ').unwrap(), 6.0);
-        assert_eq!(*val_2_char_counts.get(&'O').unwrap(), 5.0);
+        assert_eq!(*val_2_char_counts.get(&'o').unwrap(), 5.0);
     }
 
     #[test]

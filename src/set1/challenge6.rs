@@ -131,6 +131,21 @@ mod tests {
     }
 
     #[test]
+    pub fn xor_key_comparisons() {
+        let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
+        // let xor_key = "TErMinator X: BRing thE noise".as_bytes();
+        let xor_key = "Terminator X: Bring the noise".as_bytes();
+        let key_size = xor_key.len();
+        let mut plaintext = Vec::new();
+        for (count, b) in inp_str_bytes.into_iter().enumerate() {
+            plaintext.push((b ^ xor_key[count % key_size]) as char);
+        }
+        for c in plaintext {
+            print!("{c}");
+        }
+    }
+
+    #[test]
     pub fn normalized_edit_distances_to_key_size_test() {
         let inp_str_bytes = base64::base64_str_to_bytes(&INPUT_STR.replace('\n', ""));
         let distance_and_key_size = normalized_edit_distances_to_key_size(&inp_str_bytes);
